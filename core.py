@@ -1,0 +1,170 @@
+"""세션 jsonl 파싱과 HTML/TXT 변환."""
+import difflib
+import html
+import json
+import os
+import re
+from datetime import datetime
+from pathlib import Path
+
+PROJECTS = Path.home() / ".claude" / "projects"
+REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
+FILE_TOOLS = {"Write": "생성", "Edit": "수정", "MultiEdit": "수정", "NotebookEdit": "수정", "Read": "읽기"}
+CMD_TOOLS = {"Bash", "PowerShell"}
+VIEW_LIMIT = 100_000
+
+
+# ---------- 파싱 ----------
+
+def read_lines(path):
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    yield json.loads(line)
+                except ValueError:
+                    pass
+
+
+def local_time(ts):
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    except (ValueError, AttributeError):
+        return ts or ""
+
+
+def text_of(c):
+    if isinstance(c, str):
+        return c
+    if isinstance(c, list):
+        return " ".join(b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
+    return ""
+
+
+def session_info(path):
+    title, first, ts = "", "", ""
+    for r in read_lines(path):
+        if r.get("type") == "ai-title" and r.get("aiTitle"):
+            title = r["aiTitle"]
+        if not first and r.get("type") == "user" and not r.get("isMeta"):
+            first = REMINDER_RE.sub("", text_of(r.get("message", {}).get("content"))).strip()
+            ts = r.get("timestamp", "")
+    return title or first[:40].replace("\n", " ") or path.stem, ts
+
+
+def parse(path, with_reminders=False):
+    """-> dict(msgs, files, cmds, others). msgs: [(role, ts, [(kind, payload)])], kind: text|thinking|tool"""
+    tools, msgs = {}, []
+    for r in read_lines(path):
+        t = r.get("type")
+        m = r.get("message")
+        if t not in ("user", "assistant") or not isinstance(m, dict):
+            continue
+        ts = local_time(r.get("timestamp", ""))
+        c = m.get("content")
+        parts = []
+        if isinstance(c, str):
+            parts.append(("text", c))
+        elif isinstance(c, list):
+            for b in c:
+                k = b.get("type")
+                if k == "text":
+                    parts.append(("text", b.get("text", "")))
+                elif k == "thinking" and b.get("thinking"):
+                    parts.append(("thinking", b["thinking"]))
+                elif k == "tool_use":
+                    tool = {"id": b.get("id"), "name": b.get("name", ""), "input": b.get("input", {}),
+                            "ts": ts, "result": None, "error": False}
+                    tools[tool["id"]] = tool
+                    parts.append(("tool", tool))
+                elif k == "tool_result":
+                    tool = tools.get(b.get("tool_use_id"))
+                    res = b.get("content")
+                    if isinstance(res, list):
+                        res = "\n".join(x.get("text", "") for x in res if isinstance(x, dict))
+                    if tool:
+                        tool["result"], tool["error"] = str(res), bool(b.get("is_error"))
+                    else:
+                        parts.append(("text", f"[도구 결과]\n{res}"))
+        if not with_reminders:
+            parts = [(k, REMINDER_RE.sub("", x).strip() if k == "text" else x) for k, x in parts]
+        parts = [(k, x) for k, x in parts if k == "tool" or x.strip()]
+        if parts:
+            role = "user" if t == "user" else "claude"
+            if msgs and msgs[-1][0] == role:  # 같은 화자의 연속 기록은 한 메시지로 합친다
+                msgs[-1][2].extend(parts)
+            else:
+                msgs.append((role, ts, parts))
+    files, cmds, others = [], [], []
+    for _, _, parts in msgs:
+        for k, x in parts:
+            if k != "tool":
+                continue
+            if x["name"] in FILE_TOOLS:
+                files.append(x)
+            elif x["name"] in CMD_TOOLS:
+                cmds.append(x)
+            else:
+                others.append(x)
+    return {"msgs": msgs, "files": files, "cmds": cmds, "others": others}
+
+
+# ---------- 텍스트 표현 ----------
+
+def file_path_of(t):
+    i = t["input"]
+    return i.get("file_path") or i.get("notebook_path") or ""
+
+
+def tool_summary(t):
+    i = t["input"]
+    for key in ("file_path", "notebook_path", "command", "query", "url", "description", "pattern", "prompt", "skill"):
+        if i.get(key):
+            return str(i[key]).strip().split("\n")[0][:120]
+    return ""
+
+
+def diff_text(old, new):
+    return "".join(difflib.unified_diff(old.splitlines(True), new.splitlines(True), "변경 전", "변경 후"))
+
+
+def result_block(t):
+    if t["result"] is None:
+        return "(결과 기록 없음)"
+    return ("[오류]\n" if t["error"] else "") + t["result"]
+
+
+def file_detail(t):
+    i, name = t["input"], t["name"]
+    head = f"{FILE_TOOLS[name]} · {file_path_of(t)}\n{t['ts']}\n{'-' * 50}\n"
+    if name == "Write":
+        return head + i.get("content", "")
+    if name == "Edit":
+        return head + (diff_text(i.get("old_string", ""), i.get("new_string", "")) or "(변경 없음)")
+    if name == "MultiEdit":
+        return head + "\n".join(diff_text(e.get("old_string", ""), e.get("new_string", "")) for e in i.get("edits", []))
+    if name == "NotebookEdit":
+        return head + i.get("new_source", "")
+    return head + result_block(t)
+
+
+def cmd_detail(t):
+    return f"[{t['name']}] {t['ts']}\n$ {t['input'].get('command', '')}\n{'-' * 50}\n{result_block(t)}"
+
+
+def generic_detail(t):
+    return (f"[{t['name']}] {t['ts']}\n{json.dumps(t['input'], ensure_ascii=False, indent=2)}\n"
+            f"{'-' * 50}\n{result_block(t)}")
+
+
+def tool_detail(t):
+    if t["name"] in FILE_TOOLS:
+        return file_detail(t)
+    if t["name"] in CMD_TOOLS:
+        return cmd_detail(t)
+    return generic_detail(t)
+
+
+def clip(s):
+    return s if len(s) <= VIEW_LIMIT else s[:VIEW_LIMIT] + f"\n\n... (이후 {len(s) - VIEW_LIMIT:,}자 생략, TXT/HTML 저장본에는 전체 포함)"
