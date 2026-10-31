@@ -27,6 +27,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* sidebar */
 aside{width:316px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
 .brand{padding:20px 20px 12px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.2px}
+.ver{margin-left:auto;font-size:11px;font-weight:600;color:var(--dim);background:var(--chip);border-radius:20px;padding:1px 8px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e9a46f);display:grid;place-items:center;color:#fff;font-size:14px}
 .search{margin:0 16px 10px;position:relative}
 .search input{width:100%;padding:9px 12px 9px 34px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;outline:none}
@@ -49,7 +50,11 @@ aside{width:316px;background:var(--side);border-right:1px solid var(--line);disp
 .icon{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* main */
-main{flex:1;display:flex;flex-direction:column;min-width:0}
+main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.jump{position:absolute;right:26px;bottom:24px;display:none;flex-direction:column;gap:8px;z-index:5}
+.jump.on{display:flex}
+.jump button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);display:grid;place-items:center;opacity:.85;transition:.12s}
+.jump button:hover{border-color:var(--accent);color:var(--accent);opacity:1}
 header{padding:18px 28px 0;background:var(--bg)}
 .top{display:flex;align-items:flex-start;gap:12px 16px;flex-wrap:wrap}
 .top h1{margin:0;font-size:19px;letter-spacing:-.3px;line-height:1.35;flex:1;min-width:240px;overflow-wrap:anywhere}
@@ -131,7 +136,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo">✦</div>Claude Code 대화</div>
+  <div class="brand"><div class="logo">✦</div>Claude Code 대화<span class="ver">v2.2</span></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <input id="q" placeholder="대화 검색" autocomplete="off">
@@ -165,6 +170,10 @@ section.on{display:flex}
   <section id="files" class="split"></section>
   <section id="cmds" class="split"></section>
   <section id="others" class="split"></section>
+  <div class="jump" id="jump">
+    <button id="bTop" title="맨 위로"><svg class="icon" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+    <button id="bBottom" title="맨 아래로"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
+  </div>
 </main>
 <div id="toast"></div>
 <script>
@@ -278,7 +287,11 @@ async function pick(k,i){
 /* ---- 상단 ---- */
 $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t===b));
-  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t))};
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));
+  $('#jump').classList.toggle('on',b.dataset.t==='chat')};
+$('#jump').classList.add('on');
+$('#bTop').onclick=()=>$('#chat').scrollTo({top:0,behavior:'smooth'});
+$('#bBottom').onclick=()=>$('#chat').scrollTo({top:$('#chat').scrollHeight,behavior:'smooth'});
 const need=fn=>async()=>{if(!data)return toast('대화를 먼저 선택하세요');fn()};
 $('#bHtml').onclick=need(async()=>{const p=await api_().save('html');if(p)toast('저장됨: '+p)});
 $('#bTxt').onclick=need(async()=>{const p=await api_().save('txt');if(p)toast('저장됨: '+p)});

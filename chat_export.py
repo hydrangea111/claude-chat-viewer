@@ -119,6 +119,6 @@ class Api:
 
 if __name__ == "__main__":
     api = Api()
-    api._window = webview.create_window("Claude Code 대화 뷰어", (BASE / "ui.html").as_uri(), js_api=api,
+    api._window = webview.create_window("Claude Code 대화 뷰어 v2.2", (BASE / "ui.html").as_uri(), js_api=api,
                                        width=1280, height=800, min_size=(900, 560), background_color="#0f1115")
     webview.start()
