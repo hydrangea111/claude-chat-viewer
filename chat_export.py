@@ -19,7 +19,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.6"
+TITLE = "Claude Code 대화 뷰어 v3.8"
 ICON = BASE / "app.ico"
 
 
@@ -132,6 +132,83 @@ def set_window_icon():
     for size, kind in ((16, 0), (32, 1)):  # ICON_SMALL, ICON_BIG
         h = u.LoadImageW(None, str(ICON), 1, size, size, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
         u.SendMessageW(hwnd, 0x80, kind, h)  # WM_SETICON
+
+
+def clipboard_get():
+    """클립보드의 글자를 읽는다. 웹뷰의 clipboard API는 권한 창이 뜨거나 막히는 PC가 있어 윈도우 API를 직접 쓴다."""
+    if os.name != "nt":
+        return ""
+    import ctypes
+    from ctypes import wintypes
+    u, k = ctypes.windll.user32, ctypes.windll.kernel32
+    u.OpenClipboard.argtypes = [wintypes.HWND]
+    u.GetClipboardData.argtypes = [wintypes.UINT]
+    u.GetClipboardData.restype = wintypes.HANDLE
+    k.GlobalLock.argtypes = [wintypes.HANDLE]
+    k.GlobalLock.restype = ctypes.c_void_p
+    k.GlobalUnlock.argtypes = [wintypes.HANDLE]
+    for _ in range(20):                      # 다른 프로그램이 잠깐 잡고 있을 수 있어 잠시 재시도
+        if u.OpenClipboard(None):
+            break
+        time.sleep(0.02)
+    else:
+        return ""
+    try:
+        h = u.GetClipboardData(13)           # CF_UNICODETEXT
+        if not h:
+            return ""
+        p = k.GlobalLock(h)
+        if not p:
+            return ""
+        try:
+            return ctypes.wstring_at(p)
+        finally:
+            k.GlobalUnlock(h)
+    finally:
+        u.CloseClipboard()
+
+
+def clipboard_set(text):
+    """클립보드에 글자를 넣는다. 성공하면 True."""
+    if os.name != "nt":
+        return False
+    import ctypes
+    from ctypes import wintypes
+    u, k = ctypes.windll.user32, ctypes.windll.kernel32
+    u.OpenClipboard.argtypes = [wintypes.HWND]
+    u.SetClipboardData.argtypes = [wintypes.UINT, wintypes.HANDLE]
+    u.SetClipboardData.restype = wintypes.HANDLE
+    k.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
+    k.GlobalAlloc.restype = wintypes.HANDLE
+    k.GlobalLock.argtypes = [wintypes.HANDLE]
+    k.GlobalLock.restype = ctypes.c_void_p
+    k.GlobalUnlock.argtypes = [wintypes.HANDLE]
+    k.GlobalFree.argtypes = [wintypes.HANDLE]
+    data = (str(text) + "\0").encode("utf-16-le")
+    h = k.GlobalAlloc(0x0002, len(data))     # GMEM_MOVEABLE
+    if not h:
+        return False
+    p = k.GlobalLock(h)
+    if not p:
+        k.GlobalFree(h)
+        return False
+    ctypes.memmove(p, data, len(data))
+    k.GlobalUnlock(h)
+    for _ in range(20):
+        if u.OpenClipboard(None):
+            break
+        time.sleep(0.02)
+    else:
+        k.GlobalFree(h)
+        return False
+    try:
+        u.EmptyClipboard()
+        if not u.SetClipboardData(13, h):
+            k.GlobalFree(h)
+            return False
+        return True                          # 성공하면 클립보드가 메모리를 소유한다
+    finally:
+        u.CloseClipboard()
 
 
 SDK_MARK = re.compile(rb'"entrypoint"\s*:\s*"sdk-cli"')
@@ -297,6 +374,12 @@ class Api:
             return None
         self._new_cwd = r if isinstance(r, str) else r[0]
         return self._new_cwd
+
+    def get_clipboard(self):
+        return clipboard_get()
+
+    def set_clipboard(self, text):
+        return clipboard_set(text)
 
     def get_setting(self, key):
         return read_settings().get(key)

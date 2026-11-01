@@ -143,6 +143,18 @@ section.on{display:flex}
 
 
 [hidden]{display:none!important}
+/* 복사·붙여넣기 */
+.bubble,.bubble *,.code,.code *,pre,#sub,#title,.ts,.col .empty{user-select:text;-webkit-user-select:text}
+.bubble,.code,pre{cursor:text}
+.chip>.h,.chip>.h *{user-select:none;-webkit-user-select:none}
+.ts .cp{border:0;background:transparent;color:var(--accent);font:inherit;font-size:11px;cursor:pointer;padding:0 0 0 8px;opacity:0;transition:.12s}
+.msg:hover .ts .cp,.ts .cp:focus-visible{opacity:1}
+#ctx{position:fixed;z-index:40;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
+#ctx[hidden]{display:none}
+#ctx button{display:flex;width:100%;justify-content:space-between;gap:18px;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:7px 10px;border-radius:8px;cursor:pointer;text-align:left}
+#ctx button:hover:not(:disabled){background:var(--chip)}
+#ctx button:disabled{color:var(--dim);opacity:.5;cursor:default}
+#ctx kbd{color:var(--dim);font:11px inherit}
 /* queue */
 .msg.queued{opacity:.6}.msg.queued .bubble{border:1px dashed rgba(255,255,255,.55)}
 .qtag{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--dim);margin-top:4px}
@@ -183,7 +195,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.6</span></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.8</span></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -245,6 +257,7 @@ section.on{display:flex}
   <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
   <div class="mact"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mYes">확인</button></div>
 </div></div>
+<div id="ctx" hidden></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -296,10 +309,15 @@ async function openSession(s){
 $('#rem').onchange=()=>{if(cur)openSession(curInfo)};
 
 /* ---- 대화 ---- */
+let renderDeferred=false;
+function hasSelInChat(){const g=getSelection();return !!g&&!g.isCollapsed&&$('#chat').contains(g.anchorNode)}
+document.addEventListener('selectionchange',()=>{if(renderDeferred&&!hasSelInChat()){renderDeferred=false;renderChat(true)}});
 function renderChat(live){
+  if(live&&data&&hasSelInChat()){renderDeferred=true;return}   // 선택 중이면 선택을 풀 때까지 미룬다
+  renderDeferred=false;
   const el=$('#chat'),keep=el.scrollTop,atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<90;
   let h='<div class="col">';
-  for(const m of data.msgs){
+  for(const [mi,m] of data.msgs.entries()){
     const user=m.role==='user';
     let inner='';
     for(const p of m.parts){
@@ -307,7 +325,7 @@ function renderChat(live){
       else if(p.k==='thinking')inner+=`<div class="chip think"><div class="h"><span class="nm">생각</span><span class="sm">${esc(p.t.slice(0,80))}</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`;
       else inner+=`<div class="chip${p.err?' err':''}" data-cat="${p.cat}" data-idx="${p.idx}"><div class="h"><span class="nm">${esc(p.name)}</span><span class="sm">${esc(p.sum)}</span><span class="go">펼치기</span></div></div>`;
     }
-    h+=`<div class="msg ${m.role}"><div class="av">${user?'나':'C'}</div><div class="body">${inner}<div class="ts">${esc(m.ts)}</div></div></div>`;
+    h+=`<div class="msg ${m.role}"><div class="av">${user?'나':'C'}</div><div class="body">${inner}<div class="ts">${esc(m.ts)}<button class="cp" data-cp="${mi}" title="이 메시지의 글 복사">복사</button></div></div></div>`;
   }
   if(pending&&!data.msgs.slice(-6).some(m=>m.role==='user'&&m.parts.some(p=>p.k==='text'&&p.t.trim()===pending)))
     h+=`<div class="msg user"><div class="av">나</div><div class="body"><div class="bubble">${md(pending)}</div></div></div>`;
@@ -315,7 +333,7 @@ function renderChat(live){
   queue.forEach((it,i)=>{h+=`<div class="msg user queued"><div class="av">나</div><div class="body"><div class="bubble">${md(it.text)}</div><div class="qtag">응답이 끝나면 보내요 <button data-q="${i}">취소</button></div></div></div>`});
   if(!data.msgs.length&&!pending&&!queue.length)h+='<div class="empty"><div class="big">💬</div>아래 입력창에 쓰면 Claude Code와 새 대화를 시작합니다</div>';
   el.innerHTML=h+'</div>';
-  el.scrollTop=live?(atBottom?el.scrollHeight:keep):0;
+  el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
 }
 $('#chat').onclick=async e=>{
   const h=e.target.closest('.chip>.h');if(!h)return;
@@ -516,6 +534,49 @@ async function delSession(i){
   const r=await api_().delete_session(s.path);if(!r.ok)return toast(r.error);
   if(cur===s.path){await api_().new_chat();resetToNew()}
   await loadSessions();toast('휴지통으로 옮겼어요')}
+
+/* ---- 우클릭 메뉴: 웹뷰 기본 메뉴는 꺼져 있어서 직접 만든다 ---- */
+const isEdit=el=>el&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&/^(text|search|)$/.test(el.type)));
+async function copyText(t){
+  if(!t)return false;
+  let ok=false;try{ok=await api_().set_clipboard(t)}catch(e){}
+  if(!ok){try{await navigator.clipboard.writeText(t);ok=true}catch(e){}}
+  return ok}
+function selText(el){return isEdit(el)?el.value.slice(el.selectionStart,el.selectionEnd):String(getSelection())}
+function fire(el){el.dispatchEvent(new Event('input',{bubbles:true}))}
+async function pasteInto(el){
+  const t=await api_().get_clipboard();if(!t)return toast('붙여넣을 글이 없어요');
+  const a=el.selectionStart,b=el.selectionEnd;el.focus();el.setRangeText(t,a,b,'end');fire(el)}
+function ctxMenu(x,y,items){
+  const m=$('#ctx');m.innerHTML=items.map((it,i)=>`<button data-i="${i}"${it.off?' disabled':''}>${it.label}<kbd>${it.key||''}</kbd></button>`).join('');
+  m.hidden=false;m.style.left=m.style.top='0px';
+  const w=m.offsetWidth,h=m.offsetHeight;m.style.left=Math.max(4,Math.min(x,innerWidth-w-4))+'px';m.style.top=Math.max(4,Math.min(y,innerHeight-h-4))+'px';
+  m.onmousedown=e=>e.preventDefault();                      // 메뉴를 눌러도 입력창의 선택이 풀리지 않게
+  m.onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;m.hidden=true;items[+b.dataset.i].run()}}
+const hideCtx=()=>{$('#ctx').hidden=true};
+document.addEventListener('contextmenu',e=>{
+  e.preventDefault();const t=e.target,ed=isEdit(t)?t:null;
+  if(ed){
+    const has=ed.selectionStart!==ed.selectionEnd,ro=ed.disabled||ed.readOnly;
+    ed.focus();
+    return ctxMenu(e.clientX,e.clientY,[
+      {label:'잘라내기',key:'Ctrl+X',off:!has||ro,run:async()=>{if(await copyText(selText(ed))){ed.setRangeText('',ed.selectionStart,ed.selectionEnd,'end');fire(ed)}}},
+      {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(ed)))toast('복사했어요')}},
+      {label:'붙여넣기',key:'Ctrl+V',off:ro,run:()=>pasteInto(ed)},
+      {label:'전체 선택',key:'Ctrl+A',run:()=>{ed.focus();ed.select()}}])}
+  const has=!!String(getSelection());
+  ctxMenu(e.clientX,e.clientY,[
+    {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(null)))toast('복사했어요')}},
+    {label:'전체 선택',key:'Ctrl+A',run:()=>{const r=document.createRange(),g=getSelection(),n=t.closest&&t.closest('.bubble,pre,.code')||$('#chat');r.selectNodeContents(n);g.removeAllRanges();g.addRange(r)}}])});
+addEventListener('mousedown',e=>{if(!e.target.closest('#ctx'))hideCtx()},true);
+addEventListener('keydown',e=>{if(e.key==='Escape')hideCtx()});
+addEventListener('blur',hideCtx);$('#chat').addEventListener('scroll',hideCtx);
+/* 메시지 복사 버튼: 도구 칩은 빼고 글만 모아서 복사 */
+$('#chat').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-cp]');if(!b||!data)return;
+  const m=data.msgs[+b.dataset.cp];if(!m)return;
+  const t=m.parts.filter(p=>p.k==='text').map(p=>p.t).join('\n\n').trim();
+  toast(await copyText(t)?'메시지를 복사했어요':'복사하지 못했어요')});
 
 window.addEventListener('pywebviewready',async()=>{
   claudeOk=await api_().claude_available();setHint();setRunning(false);
