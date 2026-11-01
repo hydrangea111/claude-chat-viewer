@@ -19,7 +19,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.10"
+TITLE = "Claude Code 대화 뷰어 v3.11"
 ICON = BASE / "app.ico"
 
 
@@ -344,6 +344,22 @@ class Api:
                   newline="\r\n" if fmt == "txt" else None) as f:
             f.write(self._export(fmt))
         return dest
+
+    def copy_conversation(self):
+        """열려 있는 대화의 글(나 / Claude)만 시간 순서대로 클립보드에 복사한다. 도구 호출은 뺀다."""
+        if not self._cur:
+            return {"ok": False, "error": "대화를 먼저 선택하세요"}
+        blocks = []
+        for role, ts, parts in self._cur["msgs"]:
+            text = "\n\n".join(x.strip() for k, x in parts if k == "text" and x.strip())
+            if text:
+                blocks.append(f"[{'나' if role == 'user' else 'Claude'}]  {ts}\n{text}")
+        if not blocks:
+            return {"ok": False, "error": "복사할 대화 글이 없어요"}
+        out = "\n\n".join(blocks)
+        if not clipboard_set(out):
+            return {"ok": False, "error": "클립보드에 복사하지 못했어요"}
+        return {"ok": True, "n": len(blocks), "chars": len(out)}
 
     def view_browser(self):
         if self._cur:
