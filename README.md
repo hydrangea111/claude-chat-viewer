@@ -1,6 +1,6 @@
 # Claude Code 대화 뷰어
 
-Claude Code로 나눈 대화(`~/.claude/projects/**/*.jsonl`)를 읽기 좋게 보고, HTML·TXT 문서로 저장하는 Windows 프로그램입니다.
+Claude Code로 나눈 대화(`~/.claude/projects/**/*.jsonl`)를 읽기 좋게 보고, HTML·TXT 문서로 저장하는 Windows 10/11용 프로그램입니다.
 
 **[다운로드 페이지](https://dh-chat-viewer.web.app/)** · [최신 exe 바로 받기](https://github.com/hydrangea111/claude-chat-viewer/releases/latest/download/ClaudeChatViewer.exe)
 
