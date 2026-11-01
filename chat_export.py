@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 import shutil
+import socket
 import tempfile
 import threading
 import time
@@ -19,7 +20,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.12"
+TITLE = "Claude Code 대화 뷰어 v4.1"
 ICON = BASE / "app.ico"
 
 
@@ -29,6 +30,130 @@ MODE_ARGS = {
     "edit": ["--permission-mode", "acceptEdits", "--allowedTools", "Read,Grep,Glob,Edit,Write,MultiEdit,NotebookEdit"],
     "all": ["--dangerously-skip-permissions"],
 }
+# 모델 선택 버튼. 이름은 --model 에 그대로 넘긴다(비어 있으면 Claude Code 기본 설정을 따른다)
+MODELS = [
+    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따라요"},
+    {"id": "claude-fable-5-1", "label": "Fable 5.1", "desc": "가장 똑똑한 모델"},
+    {"id": "claude-opus-5-5", "label": "Opus 5.5", "desc": "어려운 일에"},
+    {"id": "claude-sonnet-5-5", "label": "Sonnet 5.5", "desc": "빠르고 균형 잡힌 모델"},
+    {"id": "claude-haiku-5-5", "label": "Haiku 5.5", "desc": "가장 빠르고 가벼워요"},
+]
+MODEL_IDS = {m["id"] for m in MODELS}
+
+# -p 모드에는 선택창(AskUserQuestion)이 없다. 대신 이 형식의 블록을 답 끝에 붙이게 해서 뷰어가 버튼으로 바꿔 그린다.
+CHOICES_PROMPT = (
+    "이 대화는 Claude Code 대화 뷰어에서 진행 중이며 AskUserQuestion 도구는 쓸 수 없다. "
+    "사용자에게 여러 선택지 중 하나를 고르게 해야 하면, 답변 맨 끝에 아래 형식의 코드 블록을 정확히 한 개만 붙여라. "
+    "블록 밖에는 질문 내용을 평소처럼 설명하고, 선택지는 2~6개의 짧은 문장으로 써라.\n"
+    "```choices\n{\"question\": \"질문\", \"options\": [\"선택지1\", \"선택지2\"]}\n```\n"
+    "자유롭게 답해도 되는 질문에는 이 블록을 쓰지 마라."
+)
+def prompt_file_args():
+    """선택 버튼 안내문을 파일로 저장해 그 경로만 넘긴다. 줄바꿈·따옴표·한글이 든 긴 글을 명령줄로 직접 넘기면
+    claude 가 .cmd 로 설치된 PC에서 깨지거나 잘리기 때문이다. 파일을 못 쓰면 안내문 없이 보낸다(버튼만 빠진다)."""
+    f = SETTINGS.parent / "choices_prompt.txt"
+    try:
+        if not f.is_file() or f.read_text(encoding="utf-8") != CHOICES_PROMPT:
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(CHOICES_PROMPT, encoding="utf-8")
+        return ["--append-system-prompt-file", str(f)]
+    except OSError:
+        return []
+
+
+# 뷰어 입력창에서 쓸 수 없는 터미널 전용 단축어(-p 에서는 동작하지 않는 내장 명령)
+BUILTIN_SLASH = {
+    "advisor", "agents", "auto-mode-setup", "autocompact", "clear", "color", "compact", "config", "output-style",
+    "context", "effort", "fast", "focus", "heapdump", "init", "mcp", "import", "model", "__remote-workflow",
+    "workflow-launch-exec", "reload-plugins", "reload-skills", "rename", "ultrareview", "usage-credits",
+    "extra-usage", "usage", "insights", "recap", "skill-doctor", "goal", "design-consent", "design-revoke",
+    "list-agents", "team-onboarding", "doctor", "send-to-project", "login", "logout", "help", "exit", "resume",
+}
+
+_AUTH_PAT = re.compile(r"invalid api key|/login|please run.*login|authentication[_ ]error|oauth token.*(expired|revoked)|"
+                       r"not logged in|unauthorized|\b401\b|credentials|token has expired", re.I)
+_NET_PAT = re.compile(r"econnrefused|enotfound|etimedout|econnreset|eai_again|fetch failed|unable to connect|"
+                      r"network (error|is unreachable)|getaddrinfo|socket hang up|connection (error|refused|reset|timed out)|"
+                      r"timed? ?out|offline", re.I)
+
+
+def classify_error(text, status=None):
+    """오류 문구/HTTP 상태를 사용자가 이해할 갈래로 나눈다: auth(로그인) | net(연결) | limit(사용량) | busy(서버 혼잡) | other"""
+    t = str(text or "")
+    try:
+        st = int(status) if status is not None else None
+    except (TypeError, ValueError):
+        st = None
+    if st in (401, 403) or _AUTH_PAT.search(t):
+        return "auth"
+    if st == 429 or re.search(r"rate.?limit|usage limit|limit reached|too many requests|quota", t, re.I):
+        return "limit"
+    if st in (500, 502, 503, 504, 529) or re.search(r"overloaded|server error|internal error|\b529\b", t, re.I):
+        return "busy"
+    if _NET_PAT.search(t):
+        return "net"
+    return "other"
+
+
+def parse_auth_status(text):
+    """`claude auth status` 의 JSON 출력 -> True(로그인됨) / False(로그아웃) / None(알 수 없음)"""
+    try:
+        v = json.loads(text).get("loggedIn")
+        return v if isinstance(v, bool) else None
+    except (ValueError, AttributeError):
+        return None
+
+
+def net_ok(host="api.anthropic.com", port=443, timeout=3.0):
+    """Anthropic 서버에 인터넷으로 닿는지(로그인과 상관없이 연결만 확인)"""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def scan_user_commands():
+    """사용자가 직접 만든 단축어(~/.claude/commands, ~/.claude/skills)를 파일에서 읽는다. 아직 한 번도 대화한 적 없어도 목록이 나오게 하는 용도."""
+    out = []
+    base = Path.home() / ".claude"
+    try:
+        for f in sorted((base / "commands").rglob("*.md")):
+            out.append(f.relative_to(base / "commands").with_suffix("").as_posix().replace("/", ":"))
+        for f in sorted((base / "skills").glob("*/SKILL.md")):
+            out.append(f.parent.name)
+    except OSError:
+        pass
+    return out
+
+
+def scan_plugin_commands(limit=400):
+    """설치된 플러그인의 단축어(이름은 `플러그인:명령`)를 파일에서 읽는다. 첫 대화 전에도 목록이 나오게 하는 용도이고,
+    대화를 한 번 하면 claude 가 알려 준 정확한 목록이 대신 쓰인다. 오래 걸리지 않게 깊이와 개수를 제한한다."""
+    out = []
+    root = Path.home() / ".claude" / "plugins"
+    try:
+        for dirpath, dirnames, filenames in os.walk(root):
+            depth = len(Path(dirpath).relative_to(root).parts)
+            dirnames[:] = [d for d in dirnames if d not in ("node_modules", ".git", "__pycache__")] if depth < 7 else []
+            if Path(dirpath).name != ".claude-plugin" or "plugin.json" not in filenames:
+                continue
+            plug = Path(dirpath).parent
+            try:
+                name = json.loads((Path(dirpath) / "plugin.json").read_text(encoding="utf-8")).get("name") or plug.name
+            except (OSError, ValueError):
+                name = plug.name
+            for f in sorted((plug / "commands").glob("*.md")):
+                out.append(f"{name}:{f.stem}")
+            for f in sorted((plug / "skills").glob("*/SKILL.md")):
+                out.append(f"{name}:{f.parent.name}")
+            if len(out) >= limit:
+                break
+    except OSError:
+        pass
+    return out
+
+
 SETTINGS = Path(os.environ.get("APPDATA") or Path.home()) / "ClaudeChatViewer" / "settings.json"
 NO_WINDOW = 0x08000000 if os.name == "nt" else 0  # CREATE_NO_WINDOW: 검은 콘솔 창이 깜빡이지 않게
 
@@ -253,6 +378,36 @@ def read_settings():
         return {}
 
 
+def save_setting(key, val):
+    try:
+        d = read_settings()
+        d[key] = val
+        SETTINGS.parent.mkdir(parents=True, exist_ok=True)
+        SETTINGS.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        return True
+    except OSError:
+        return False
+
+
+def session_usage(path):
+    """대화 파일에 기록된 토큰 사용량 합계. 한 응답이 블록마다 여러 줄로 기록되므로 message.id 로 중복을 뺀다."""
+    seen = {}
+    try:
+        for r in core.read_lines(Path(path)):
+            m = r.get("message")
+            if r.get("type") == "assistant" and isinstance(m, dict) and isinstance(m.get("usage"), dict):
+                seen[m.get("id") or id(r)] = m["usage"]
+    except OSError:
+        return None
+    tot = {"in": 0, "out": 0, "cache_read": 0, "cache_new": 0, "turns": len(seen)}
+    for u in seen.values():
+        tot["in"] += int(u.get("input_tokens") or 0)
+        tot["out"] += int(u.get("output_tokens") or 0)
+        tot["cache_read"] += int(u.get("cache_read_input_tokens") or 0)
+        tot["cache_new"] += int(u.get("cache_creation_input_tokens") or 0)
+    return tot
+
+
 def custom_titles():
     t = read_settings().get("titles")
     return t if isinstance(t, dict) else {}
@@ -299,6 +454,19 @@ class Api:
         for role, ts, parts in self._cur["msgs"]:
             ps = []
             for k, x in parts:
+                if k == "tool" and x["name"] == "AskUserQuestion" and isinstance(x["input"].get("questions"), list):
+                    qs = []
+                    for q in x["input"]["questions"]:
+                        if not isinstance(q, dict):
+                            continue
+                        opts = [{"label": str(o.get("label", "")), "desc": str(o.get("description", ""))}
+                                for o in q.get("options", []) if isinstance(o, dict) and o.get("label")]
+                        if q.get("question") and opts:
+                            qs.append({"q": str(q["question"]), "h": str(q.get("header", "")), "opts": opts,
+                                       "multi": bool(q.get("multiSelect"))})
+                    if qs:
+                        ps.append({"k": "ask", "qs": qs, "answered": x["result"] is not None and not x["error"]})
+                        continue
                 if k == "tool":
                     cat, idx = where[x["id"]]
                     ps.append({"k": "tool", "cat": cat, "idx": idx, "name": x["name"], "sum": core.tool_summary(x),
@@ -309,6 +477,7 @@ class Api:
         d = self._cur
         return {
             "msgs": msgs,
+            "usage": session_usage(path),
             "ver": self._ver(path),
             "cwd": self._cwd_of(path),
             "files": [{"ts": t["ts"], "act": core.FILE_TOOLS[t["name"]], "path": core.file_path_of(t),
@@ -352,6 +521,7 @@ class Api:
         blocks = []
         for role, ts, parts in self._cur["msgs"]:
             text = "\n\n".join(x.strip() for k, x in parts if k == "text" and x.strip())
+            text = re.sub(r"```choices[\s\S]*?```", "", text).strip()   # 뷰어가 버튼으로 그리는 선택 블록은 복사에서 뺀다
             if text:
                 blocks.append(f"[{'나' if role == 'user' else 'Claude'}]  {ts}\n{text}")
         if not blocks:
@@ -391,6 +561,47 @@ class Api:
         self._new_cwd = r if isinstance(r, str) else r[0]
         return self._new_cwd
 
+    def get_models(self):
+        return MODELS
+
+    def get_limits(self):
+        v = read_settings().get("limits")
+        return v if isinstance(v, dict) else None
+
+    def get_commands(self):
+        """입력창 자동완성용 단축어 목록. 마지막 대화에서 받은 목록(스킬 포함)과 사용자 폴더의 직접 만든 단축어를 합친다."""
+        cache = read_settings().get("cmd_cache") or {}
+        names = []
+        for n in list(cache.get("skills") or []) + scan_user_commands() + scan_plugin_commands() + \
+                [c for c in cache.get("commands") or [] if c not in BUILTIN_SLASH]:
+            if isinstance(n, str) and n and n not in BUILTIN_SLASH and n not in names:
+                names.append(n)
+        return names
+
+    def health(self):
+        """로그인과 인터넷 연결 점검(읽기만 한다). net: 인터넷, login: True/False/None(확인 못 함)"""
+        net = net_ok()
+        login = None
+        exe = find_claude()
+        if exe and net:
+            try:
+                r = subprocess.run([exe, "auth", "status"], capture_output=True, timeout=15, creationflags=NO_WINDOW)
+                login = parse_auth_status(r.stdout.decode("utf-8", "replace"))
+            except (OSError, subprocess.SubprocessError):
+                login = None
+        return {"net": net, "login": login, "claude": bool(exe)}
+
+    def open_login(self):
+        """사용자가 누르면 새 콘솔 창에서 Claude Code 를 연다. 거기서 사용자가 /login 을 입력해 로그인한다(로그인 자체는 사용자가 브라우저에서 한다)."""
+        exe = find_claude()
+        if not exe:
+            return False
+        try:
+            subprocess.Popen([exe], cwd=str(Path.home()), creationflags=0x00000010 if os.name == "nt" else 0)  # CREATE_NEW_CONSOLE
+            return True
+        except OSError:
+            return False
+
     def get_clipboard(self):
         return clipboard_get()
 
@@ -401,14 +612,7 @@ class Api:
         return read_settings().get(key)
 
     def set_setting(self, key, val):
-        try:
-            d = read_settings()
-            d[key] = val
-            SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-            SETTINGS.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
-            return True
-        except OSError:
-            return False
+        return save_setting(key, val)
 
     def rename_session(self, path, title):
         """대화 이름을 바꾼다. 대화 파일은 그대로 두고 뷰어 설정에만 저장한다(빈 이름이면 원래 이름으로 되돌림)."""
@@ -467,7 +671,7 @@ class Api:
         v = self._ver(path)
         return {"ver": v, "idle": (time.time() - v[0] / 1e9) if v else None}
 
-    def send(self, text, mode, files=None):
+    def send(self, text, mode, files=None, model=None, chrome=False, web=False):
         text = (text or "").strip()
         if not text:
             return {"ok": False, "error": "빈 메시지입니다"}
@@ -476,7 +680,18 @@ class Api:
         exe = find_claude()
         if not exe:
             return {"ok": False, "error": "claude 명령을 찾을 수 없습니다. Claude Code를 설치하고 로그인해 주세요"}
-        args = [exe, "-p", "--output-format", "stream-json", "--verbose", *MODE_ARGS.get(mode, MODE_ARGS["read"])]
+        mode_args = list(MODE_ARGS.get(mode, MODE_ARGS["read"]))
+        if "--allowedTools" in mode_args:                 # 켜 둔 기능의 도구만 허용 목록에 더한다(모두 허용 모드는 원래 전부 허용)
+            i = mode_args.index("--allowedTools") + 1
+            if chrome:
+                mode_args[i] += ",mcp__claude-in-chrome"
+            if web:
+                mode_args[i] += ",WebSearch,WebFetch"
+        args = [exe, "-p", "--output-format", "stream-json", "--verbose", *mode_args, *prompt_file_args()]
+        if chrome:
+            args.append("--chrome")
+        if model in MODEL_IDS and model:                  # 목록에 있는 이름만 넘긴다(임의 문자열이 명령줄에 들어가지 않게)
+            args += ["--model", model]
         # 입력창에 넣은 파일이 작업 폴더 밖에 있어도 읽을 수 있게, 그 파일이 있는 폴더만 추가로 허용한다
         dirs = {os.path.dirname(f) for f in files or [] if isinstance(f, str) and os.path.isfile(f)}
         for d in sorted(dirs):
@@ -495,7 +710,7 @@ class Api:
                                     stderr=subprocess.PIPE, creationflags=NO_WINDOW)
         except OSError as e:
             return {"ok": False, "error": f"실행하지 못했습니다: {e}"}
-        run = {"proc": proc, "sid": sid, "path": path, "result": None, "stderr": ""}
+        run = {"proc": proc, "sid": sid, "path": path, "result": None, "stderr": "", "limit": None, "model": None}
         self._run = run
 
         def feed():
@@ -511,8 +726,23 @@ class Api:
                     ev = json.loads(line.decode("utf-8", "replace"))
                 except ValueError:
                     continue
-                if ev.get("type") == "result":
+                typ = ev.get("type")
+                if typ == "result":
                     run["result"] = ev
+                elif typ == "system" and ev.get("subtype") == "init":
+                    run["model"] = ev.get("model")
+                    cmds = [c for c in (ev.get("slash_commands") or []) if isinstance(c, str)]
+                    skills = [c for c in (ev.get("skills") or []) if isinstance(c, str)]
+                    if cmds or skills:                     # 다음에 열었을 때 바로 자동완성이 되도록 저장
+                        save_setting("cmd_cache", {"commands": cmds, "skills": skills})
+                elif typ == "rate_limit_event":
+                    info = ev.get("rate_limit_info") or {}
+                    wins = {k: {"u": v.get("utilization"), "r": v.get("resetsAt")}
+                            for k, v in (info.get("unifiedWindows") or {}).items() if isinstance(v, dict)}
+                    if wins:                                   # 전체 한도 대비 사용률: 마지막으로 받은 값을 기억해 둔다
+                        save_setting("limits", {"at": time.time(), "windows": wins})
+                    if info.get("status") not in (None, "allowed"):
+                        run["limit"] = info
 
         def read_err():
             run["stderr"] = proc.stderr.read().decode("utf-8", "replace")
@@ -547,7 +777,14 @@ class Api:
                 error = str(res.get("result") or "오류가 났습니다")
             elif r["proc"].returncode:
                 error = (r["stderr"].strip().splitlines() or [f"종료 코드 {r['proc'].returncode}"])[-1]
-        return {"running": running, "path": r["path"], "ver": ver, "error": error}
+        kind = None
+        if error:
+            res = r["result"] or {}
+            kind = classify_error(error + " " + r["stderr"][-400:], res.get("api_error_status"))
+            if kind == "other" and r["limit"]:
+                kind = "limit"
+        return {"running": running, "path": r["path"], "ver": ver, "error": error, "kind": kind,
+                "model": r.get("model")}
 
     def stop(self):
         r = self._run
