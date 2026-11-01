@@ -25,7 +25,20 @@ button{font:inherit;color:inherit;cursor:pointer}
 ::-webkit-scrollbar-thumb:hover{background:var(--dim);background-clip:padding-box;border:2px solid transparent}
 
 /* sidebar */
-aside{width:316px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0}
+aside{width:var(--sw,316px);background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+aside>*{min-width:240px}
+body.collapsed aside{border-right:0}
+body:not(.dragging) aside{transition:width .16s ease}
+#rz{width:7px;margin:0 -4px 0 -3px;cursor:col-resize;z-index:6;flex-shrink:0;position:relative;touch-action:none}
+#rz:hover,body.dragging #rz{background:linear-gradient(90deg,transparent 2px,var(--accent) 2px,var(--accent) 4px,transparent 4px)}
+body.dragging{cursor:col-resize;user-select:none}
+.sbtn{border:0;background:transparent;color:var(--dim);width:28px;height:28px;border-radius:8px;display:grid;place-items:center;cursor:pointer;padding:0}
+.sbtn:hover{background:var(--chip);color:var(--accent)}
+.sbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+.brand .sbtn{margin-left:4px}
+#sbOpen{position:fixed;left:10px;top:14px;z-index:7;display:none;background:var(--panel);border:1px solid var(--line)}
+body.collapsed #sbOpen{display:grid}
+body.collapsed header{padding-left:56px}
 .brand{padding:20px 20px 12px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.2px}
 .ver{margin-left:auto;font-size:11px;font-weight:600;color:var(--dim);background:var(--chip);border-radius:20px;padding:1px 8px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e9a46f);display:grid;place-items:center;color:#fff;font-size:14px}
@@ -195,7 +208,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.11</span></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.12</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -207,12 +220,14 @@ section.on{display:flex}
     <button class="btn sm" id="bRefresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>새로고침</button>
   </div>
 </aside>
+<div id="rz" title="끌어서 크기 조절 · 더블클릭: 접기/펼치기"></div>
+<button class="sbtn" id="sbOpen" title="사이드바 펼치기"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
 <main>
   <header>
     <div class="top">
       <h1 id="title">대화를 선택하세요<div class="sub" id="sub"></div></h1>
       <div class="actions">
-        <label class="switch" title="system-reminder 블록을 대화에 포함"><input type="checkbox" id="rem"><i></i>시스템 알림</label>
+        <label class="switch" title="Claude Code가 메시지에 몰래 끼워 넣는 안내문(system-reminder)을 대화에 함께 보여줘요. 평소엔 꺼 두세요."><input type="checkbox" id="rem"><i></i>시스템 안내문</label>
         <button class="btn" id="bCopyAll" title="이 대화의 글을 모두 복사 (도구 호출은 제외)">대화 복사</button>
         <button class="btn" id="bBrowser">브라우저로 보기</button>
         <button class="btn" id="bHtml">HTML 저장</button>
@@ -580,7 +595,24 @@ $('#chat').addEventListener('click',async e=>{
   const t=m.parts.filter(p=>p.k==='text').map(p=>p.t).join('\n\n').trim();
   toast(await copyText(t)?'메시지를 복사했어요':'복사하지 못했어요')});
 
+/* ---- 사이드바 크기 조절: 끌어서 줄이거나 늘리고, 0까지 접을 수 있다 ---- */
+const SB_MIN=220,SB_MAX=560,SB_SNAP=110;let sbW=316,sbLast=316;
+function setSb(w,save){
+  w=Math.round(w);sbW=w;if(w>0)sbLast=w;
+  document.documentElement.style.setProperty('--sw',w+'px');document.body.classList.toggle('collapsed',w===0);
+  if(save)try{api_().set_setting('sidebar',w)}catch(e){}}
+const sbFromX=x=>x<SB_SNAP?0:Math.max(SB_MIN,Math.min(SB_MAX,x));
+$('#rz').addEventListener('pointerdown',e=>{
+  e.preventDefault();const rz=$('#rz');rz.setPointerCapture(e.pointerId);document.body.classList.add('dragging');
+  const mv=ev=>setSb(sbFromX(ev.clientX),false);
+  const up=()=>{rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);
+    document.body.classList.remove('dragging');setSb(sbW,true)};
+  rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up)});
+const toggleSb=()=>setSb(sbW===0?sbLast:0,true);
+$('#rz').addEventListener('dblclick',toggleSb);$('#sbClose').onclick=toggleSb;$('#sbOpen').onclick=toggleSb;
+
 window.addEventListener('pywebviewready',async()=>{
+  try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
   const init=await api_().get_initial();
   await loadSessions();

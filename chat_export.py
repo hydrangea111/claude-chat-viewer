@@ -19,7 +19,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.11"
+TITLE = "Claude Code 대화 뷰어 v3.12"
 ICON = BASE / "app.ico"
 
 
