@@ -23,7 +23,7 @@ Claude Code로 나눈 대화(`~/.claude/projects/**/*.jsonl`)를 읽기 좋게 �
 
 ## 실행
 - **exe:** Releases에서 받아 더블클릭. Windows "PC 보호" 경고가 뜨면 *추가 정보 → 실행*. (서명 없는 개인 프로그램)
-- **소스:** `pip install pywebview` 후 `python chat_export.py` 또는 `run.bat`
+- **소스(exe가 Windows에 막힐 때):** 소스를 받아 `run.bat`을 더블클릭하세요. 파이썬이 있는지, pywebview가 설치돼 있는지 확인하고 필요하면 설치를 안내합니다. 파이썬 설치부터 따라 하려면 [안내 페이지](https://dh-chat-viewer.web.app/python-install.html)를 보세요. 직접 하려면 `pip install pywebview` 후 `python chat_export.py`.
 - 환경: Windows 10/11 64비트, Microsoft Edge WebView2 (Windows 11 기본 포함)
 - 입력창을 쓰려면 Claude Code가 설치되고 로그인돼 있어야 합니다.
 
