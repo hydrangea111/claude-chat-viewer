@@ -19,7 +19,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.5"
+TITLE = "Claude Code 대화 뷰어 v3.6"
 ICON = BASE / "app.ico"
 
 
@@ -132,6 +132,40 @@ def set_window_icon():
     for size, kind in ((16, 0), (32, 1)):  # ICON_SMALL, ICON_BIG
         h = u.LoadImageW(None, str(ICON), 1, size, size, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
         u.SendMessageW(hwnd, 0x80, kind, h)  # WM_SETICON
+
+
+SDK_MARK = re.compile(rb'"entrypoint"\s*:\s*"sdk-cli"')
+
+
+def unmark_sdk(path):
+    """뷰어(claude -p)가 쓴 대화 파일의 entrypoint 표시를 sdk-cli -> cli 로 바꿔, 터미널 Claude Code의 /resume 목록에도 보이게 한다.
+    Claude Code는 파일 앞부분의 entrypoint가 sdk-*이면 SDK 대화로 보고 목록에서 뺀다.
+    안전장치: 읽은 뒤 파일이 바뀌었으면 건드리지 않고, 바뀐 줄이 모두 올바른 JSON일 때만 임시 파일을 거쳐 통째로 교체한다. 바꿨으면 True."""
+    try:
+        st = os.stat(path)
+        raw = Path(path).read_bytes()
+        if not SDK_MARK.search(raw):
+            return False
+        lines = raw.split(b"\n")
+        for i, ln in enumerate(lines):
+            if SDK_MARK.search(ln):
+                new = SDK_MARK.sub(b'"entrypoint":"cli"', ln)
+                json.loads(new.decode("utf-8"))           # 깨진 줄이 생기면 예외 -> 아무것도 바꾸지 않는다
+                lines[i] = new
+        tmp = str(path) + ".ccv-tmp"
+        Path(tmp).write_bytes(b"\n".join(lines))
+        now = os.stat(path)
+        if (now.st_mtime_ns, now.st_size) != (st.st_mtime_ns, st.st_size):   # 그 사이 다른 곳에서 썼다면 포기
+            os.remove(tmp)
+            return False
+        os.replace(tmp, path)
+        return True
+    except (OSError, ValueError):
+        try:
+            os.remove(str(path) + ".ccv-tmp")
+        except OSError:
+            pass
+        return False
 
 
 def read_settings():
@@ -395,6 +429,11 @@ class Api:
         if not r["path"]:
             hit = next(core.PROJECTS.glob(f"*/{r['sid']}.jsonl"), None) if core.PROJECTS.exists() else None
             r["path"] = str(hit) if hit else None
+        running = r["proc"].poll() is None
+        if not running and r["path"] and not r.get("unmarked"):
+            r["unmarked"] = True
+            if read_settings().get("terminal_visible", True):
+                unmark_sdk(r["path"])
         ver = None
         if r["path"]:
             try:
@@ -402,7 +441,6 @@ class Api:
                 ver = [st.st_mtime_ns, st.st_size]
             except OSError:
                 pass
-        running = r["proc"].poll() is None
         error = None
         if not running:
             res = r["result"] or {}
