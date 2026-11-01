@@ -19,7 +19,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v3.3"
+TITLE = "Claude Code 대화 뷰어 v3.4"
 ICON = BASE / "app.ico"
 
 
@@ -134,6 +134,25 @@ def set_window_icon():
         u.SendMessageW(hwnd, 0x80, kind, h)  # WM_SETICON
 
 
+def read_settings():
+    try:
+        d = json.loads(SETTINGS.read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def custom_titles():
+    t = read_settings().get("titles")
+    return t if isinstance(t, dict) else {}
+
+
+def session_info(path):
+    """(제목, 시각). 뷰어에서 바꾼 이름이 있으면 그것을 우선한다."""
+    title, ts = core.session_info(path)
+    return custom_titles().get(Path(path).stem) or title, ts
+
+
 class Api:
     def __init__(self):
         self._window = None
@@ -147,15 +166,17 @@ class Api:
     def get_initial(self):
         if not self._initial:
             return None
-        title, ts = core.session_info(Path(self._initial))
+        title, ts = session_info(Path(self._initial))
         return {"path": self._initial, "title": title, "date": core.local_time(ts)}
 
     def list_sessions(self):
         files = sorted(core.PROJECTS.glob("*/*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True) \
             if core.PROJECTS.exists() else []
         out = []
+        titles = custom_titles()
         for p in files:
             title, ts = core.session_info(p)
+            title = titles.get(p.stem) or title
             out.append({"path": str(p), "title": title, "date": core.local_time(ts), "project": p.parent.name})
         return out
 
@@ -244,23 +265,37 @@ class Api:
         return self._new_cwd
 
     def get_setting(self, key):
-        try:
-            return json.loads(SETTINGS.read_text(encoding="utf-8")).get(key)
-        except (OSError, ValueError):
-            return None
+        return read_settings().get(key)
 
     def set_setting(self, key, val):
         try:
-            try:
-                d = json.loads(SETTINGS.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                d = {}
+            d = read_settings()
             d[key] = val
             SETTINGS.parent.mkdir(parents=True, exist_ok=True)
             SETTINGS.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
             return True
         except OSError:
             return False
+
+    def rename_session(self, path, title):
+        """대화 이름을 바꾼다. 대화 파일은 그대로 두고 뷰어 설정에만 저장한다(빈 이름이면 원래 이름으로 되돌림)."""
+        try:
+            p = Path(path).resolve()
+            if p.suffix != ".jsonl" or core.PROJECTS.resolve() not in p.parents:
+                return {"ok": False, "error": "Claude Code 대화 폴더 밖의 파일은 바꿀 수 없어요"}
+            title = " ".join(str(title or "").split())[:80]
+            d = read_settings()
+            titles = custom_titles()
+            if title:
+                titles[p.stem] = title
+            else:
+                titles.pop(p.stem, None)
+            d["titles"] = titles
+            SETTINGS.parent.mkdir(parents=True, exist_ok=True)
+            SETTINGS.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+            return {"ok": True, "title": title or core.session_info(p)[0]}
+        except OSError as e:
+            return {"ok": False, "error": str(e)}
 
     def delete_session(self, path):
         """대화 파일을 휴지통으로 옮긴다. Claude Code가 저장하는 폴더 안의 .jsonl만 대상이다."""

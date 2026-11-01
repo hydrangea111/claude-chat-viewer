@@ -135,7 +135,11 @@ section.on{display:flex}
 .card{position:relative}
 .card .del{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--dim);display:grid;place-items:center;opacity:0;transition:.12s;padding:0}
 .card:hover .del{opacity:1}.card .del:hover{background:var(--chip);border-color:var(--line);color:var(--err)}
-.card .t{padding-right:24px}
+.card .t{padding-right:56px}
+.card .ren{position:absolute;right:36px;top:8px;width:26px;height:26px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--dim);display:grid;place-items:center;opacity:0;transition:.12s;padding:0}
+.card:hover .ren{opacity:1}.card .ren:hover{background:var(--chip);border-color:var(--line);color:var(--accent)}
+.mbox input{width:100%;margin:0 0 16px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;outline:none}
+.mbox input:focus{border-color:var(--accent)}
 
 
 [hidden]{display:none!important}
@@ -175,7 +179,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.3</span></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v3.4</span></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -234,7 +238,7 @@ section.on{display:flex}
   </div>
 </main>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true">
-  <h3 id="mT"></h3><p id="mB"></p>
+  <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
   <div class="mact"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mYes">확인</button></div>
 </div></div>
 <div id="toast"></div>
@@ -263,10 +267,11 @@ function renderSessions(){
   const q=$('#q').value.trim().toLowerCase();
   const list=sessions.map((s,i)=>[s,i]).filter(([s])=>!q||(s.title+s.project).toLowerCase().includes(q));
   $('#sessions').innerHTML=list.length?list.map(([s,i])=>
-    `<div class="card${cur===s.path?' on':''}" data-i="${i}"><div class="t">${esc(s.title)}</div><div class="m">${esc(s.date)}</div><button class="del" data-del="${i}" title="삭제(휴지통으로 이동)"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button></div>`).join('')
+    `<div class="card${cur===s.path?' on':''}" data-i="${i}"><div class="t">${esc(s.title)}</div><div class="m">${esc(s.date)}</div><button class="ren" data-ren="${i}" title="이름 바꾸기"><svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button><button class="del" data-del="${i}" title="삭제(휴지통으로 이동)"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button></div>`).join('')
     :'<div class="empty">대화가 없습니다</div>';
 }
 $('#sessions').onclick=e=>{const d=e.target.closest('.del');if(d){e.stopPropagation();return delSession(+d.dataset.del)}
+  const rn=e.target.closest('.ren');if(rn){e.stopPropagation();return renameSession(+rn.dataset.ren)}
   const c=e.target.closest('.card');if(c)openSession(sessions[+c.dataset.i])};
 $('#q').oninput=renderSessions;
 
@@ -458,6 +463,22 @@ $('#bNew').onclick=async()=>{
   if(running)return toast('응답을 기다리는 중에는 새 대화를 시작할 수 없어요');
   await api_().new_chat();resetToNew();
   document.querySelector('.tab[data-t="chat"]').click();$('#msg').focus()};
+/* 이름 바꾸기: 입력칸이 있는 확인창. 확인하면 새 이름(문자열), 취소하면 null */
+function askText(title,body,value){return new Promise(res=>{
+  $('#mT').textContent=title;$('#mB').textContent=body;
+  const y=$('#mYes'),n=$('#mNo'),inp=$('#mIn');y.textContent='저장';y.className='btn primary';
+  inp.hidden=false;inp.value=value;$('#modal').hidden=false;inp.focus();inp.select();
+  const done=v=>{$('#modal').hidden=true;inp.hidden=true;y.onclick=n.onclick=inp.onkeydown=null;res(v)};
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();done(inp.value)}else if(e.key==='Escape'){e.preventDefault();done(null)}};
+  y.onclick=()=>done(inp.value);n.onclick=()=>done(null)})}
+async function renameSession(i){
+  const s=sessions[i];if(!s)return;
+  const v=await askText('대화 이름 바꾸기','뷰어에서만 바뀌어요. 비워서 저장하면 원래 이름으로 돌아갑니다.',s.title);
+  if(v===null||v.trim()===s.title)return;
+  const r=await api_().rename_session(s.path,v);if(!r.ok)return toast(r.error);
+  if(cur===s.path)$('#title').firstChild.textContent=r.title;
+  await loadSessions();if(cur===s.path)curInfo=sessions.find(x=>x.path===cur)||curInfo;
+  toast('이름을 바꿨어요')}
 async function delSession(i){
   const s=sessions[i];if(!s)return;
   if(running&&s.path===cur)return toast('응답 중인 대화는 삭제할 수 없어요');
