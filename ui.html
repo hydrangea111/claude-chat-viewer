@@ -153,6 +153,9 @@ section.on{display:flex}
 .card:hover .ren{opacity:1}.card .ren:hover{background:var(--chip);border-color:var(--line);color:var(--accent)}
 .mbox input{width:100%;margin:0 0 16px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;outline:none}
 .mbox input:focus{border-color:var(--accent)}
+.skipl{display:flex;gap:8px;align-items:center;margin:-4px 0 16px;font-size:12.5px;color:var(--dim);cursor:pointer;user-select:none}
+.skipl[hidden]{display:none}
+.mbox .skipl input{width:16px;height:16px;margin:0;padding:0;flex:none;accent-color:var(--accent);cursor:pointer}
 
 
 [hidden]{display:none!important}
@@ -246,7 +249,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.4</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -312,7 +315,7 @@ section.on{display:flex}
 </main>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true">
   <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
-  <label id="mSkipL" hidden style="display:flex;gap:6px;align-items:center;margin:10px 0 0;font-size:12.5px;color:var(--dim);cursor:pointer"><input type="checkbox" id="mSkip"> 다음부터 이 확인창 보지 않기</label>
+  <label id="mSkipL" class="skipl" hidden><input type="checkbox" id="mSkip"><span>다음부터 이 확인창 보지 않기</span></label>
   <div class="mact"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mYes">확인</button></div>
 </div></div>
 <div id="ctx" hidden></div>
@@ -434,8 +437,15 @@ function renderUsage(){
   }
   const w=limits&&limits.windows;
   if(w){
-    const f=k=>w[k]&&typeof w[k].u==='number'?Math.round(w[k].u*100)+'%':null,a=f('five_hour'),b=f('seven_day');
-    if(a||b)parts.push('전체 한도 대비 '+[a&&'5시간 '+a,b&&'7일 '+b].filter(Boolean).join(' · ')+' (마지막 응답 기준)');
+    const now=Date.now();
+    const f=k=>{const x=w[k];if(!x||typeof x.u!=='number')return null;const p=Math.round(x.u*100)+'%';
+      let r=Number(x.r);if(r&&r<1e12)r*=1000;                       // 초 단위로 오면 ms로
+      return r&&r<now?'초기화됨(이전 '+p+')':p};                    // 초기화 시각이 지났으면 옛 값이라고 표시
+    const a=f('five_hour'),b=f('seven_day');
+    if(a||b){
+      const m=limits.at?Math.max(0,Math.round((now/1000-limits.at)/60)):null;
+      const ago=m===null?'':m<1?' · 방금':m<60?' · '+m+'분 전':m<1440?' · '+Math.floor(m/60)+'시간 전':' · '+Math.floor(m/1440)+'일 전';
+      parts.push('전체 한도 대비 '+[a&&'5시간 '+a,b&&'7일 '+b].filter(Boolean).join(' · ')+' (마지막 응답 기준'+ago+')')}
   }
   $('#usage').textContent=parts.join('  |  ');
 }
@@ -557,7 +567,7 @@ function ask0(title,body,yes,danger,canSkip){return new Promise(res=>{
   $('#mT').textContent=title;$('#mB').textContent=body;$('#mSkip').checked=false;$('#mSkipL').hidden=!canSkip;
   const y=$('#mYes'),n=$('#mNo');y.textContent=yes;y.className='btn '+(danger?'danger':'primary');
   $('#modal').hidden=false;y.focus();
-  const done=v=>{$('#modal').hidden=true;y.onclick=n.onclick=null;document.removeEventListener('keydown',key,true);res(v)};
+  const done=v=>{$('#modal').hidden=true;$('#mSkipL').hidden=true;y.onclick=n.onclick=null;document.removeEventListener('keydown',key,true);res(v)};
   const key=e=>{if(e.key==='Escape'){e.preventDefault();done(false)}};
   document.addEventListener('keydown',key,true);y.onclick=()=>done(true);n.onclick=()=>done(false)})}
 async function ensureConsent(){
