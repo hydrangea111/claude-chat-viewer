@@ -72,6 +72,8 @@ header{padding:18px 28px 0;background:var(--bg)}
 .top{display:flex;align-items:flex-start;gap:12px 16px;flex-wrap:wrap}
 .top h1{margin:0;font-size:19px;letter-spacing:-.3px;line-height:1.35;flex:1;min-width:240px;overflow-wrap:anywhere}
 .top .sub{color:var(--dim);font-size:12px;margin-top:2px;font-weight:400}
+#usage b{color:var(--text);font-weight:600;margin-right:4px}
+#usage .hot{color:var(--err);font-weight:700}
 .actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
 .switch{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--dim);cursor:pointer;user-select:none;margin-right:6px}
 .switch input{display:none}
@@ -433,21 +435,22 @@ const nfmt=n=>n>=100000000?(n/100000000).toFixed(1)+'억':n>=10000?(n/10000).toF
 function renderUsage(){
   const u=data&&data.usage,parts=[];
   if(u&&u.turns){
-    parts.push(`이 대화 토큰 입력 ${nfmt(u.in+u.cache_new)} · 출력 ${nfmt(u.out)} · 캐시 읽기 ${nfmt(u.cache_read)}`);
+    parts.push(`<b>토큰</b>  입력 ${nfmt(u.in+u.cache_new)} · 출력 ${nfmt(u.out)} · 캐시 ${nfmt(u.cache_read)}`);
   }
   const w=limits&&limits.windows;
   if(w){
     const now=Date.now();
-    const f=k=>{const x=w[k];if(!x||typeof x.u!=='number')return null;const p=Math.round(x.u*100)+'%';
+    const f=(k,nm)=>{const x=w[k];if(!x||typeof x.u!=='number')return null;const n=Math.round(x.u*100),p=n+'%';
       let r=Number(x.r);if(r&&r<1e12)r*=1000;                       // 초 단위로 오면 ms로
-      return r&&r<now?'초기화됨(이전 '+p+')':p};                    // 초기화 시각이 지났으면 옛 값이라고 표시
-    const a=f('five_hour'),b=f('seven_day');
+      if(r&&r<now)return nm+' 초기화됨('+p+')';                     // 초기화 시각이 지났으면 옛 값이라고 표시
+      return n>=80?`<span class="hot">${nm} ${p}</span>`:nm+' '+p};  // 80% 이상이면 눈에 띄게
+    const a=f('five_hour','5시간'),b=f('seven_day','7일');
     if(a||b){
       const m=limits.at?Math.max(0,Math.round((now/1000-limits.at)/60)):null;
-      const ago=m===null?'':m<1?' · 방금':m<60?' · '+m+'분 전':m<1440?' · '+Math.floor(m/60)+'시간 전':' · '+Math.floor(m/1440)+'일 전';
-      parts.push('전체 한도 대비 '+[a&&'5시간 '+a,b&&'7일 '+b].filter(Boolean).join(' · ')+' (마지막 응답 기준'+ago+')')}
+      const ago=m===null?'':m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전';
+      parts.push('<b>한도</b>  '+[a,b].filter(Boolean).join(' · ')+(ago?'  · '+ago+' 기준':''))}
   }
-  $('#usage').textContent=parts.join('  |  ');
+  $('#usage').innerHTML=parts.map(x=>'<div>'+x+'</div>').join('');
 }
 async function loadLimits(){try{limits=await api_().get_limits()}catch(e){}renderUsage()}
 function renderChat(live){
