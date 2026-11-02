@@ -201,6 +201,14 @@ section.on{display:flex}
 .empty{margin:auto;color:var(--dim);text-align:center;padding:40px}
 .empty .big{font-size:38px;margin-bottom:8px;opacity:.6}
 /* 모델 선택 / 단축어 자동완성 / 선택 버튼 / 연결 알림 */
+#bEffort{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
+#bEffort:hover{color:var(--text);border-color:var(--accent)}
+#helpModal .mbox{max-width:680px;max-height:82vh;overflow:auto;text-align:left}
+.help h4{margin:16px 0 6px;font-size:14px}
+.help p,.help li{font-size:13px;color:var(--dim);margin:3px 0}
+.help ul{margin:4px 0 4px 18px;padding:0}
+.help b{color:var(--text)}
+.help code{background:var(--chip);border-radius:5px;padding:0 5px}
 .mrow{display:flex;align-items:center;gap:8px;position:relative}
 .mrow .sp{flex:1}
 #bWeb{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
@@ -238,7 +246,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.1</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.2</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -248,6 +256,7 @@ section.on{display:flex}
   <div class="side-foot">
     <button class="btn sm" id="bTheme" title="다크 / 라이트 전환"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
     <button class="btn sm" id="bRefresh"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>새로고침</button>
+    <button class="btn sm" id="bHelp" title="단축어 설명과 오류 대처법">? 도움말</button>
   </div>
 </aside>
 <div id="rz" title="끌어서 크기 조절 · 더블클릭: 접기/펼치기"></div>
@@ -286,7 +295,7 @@ section.on{display:flex}
         <button data-m="read" class="on" title="파일 읽기·검색만 허용">읽기만</button>
         <button data-m="edit" title="파일 수정까지 허용">파일 수정</button>
         <button data-m="all" title="명령 실행까지 전부 허용 (주의)">모두 허용</button>
-      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있어요">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있어요 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bModel" title="이 대화에서 쓸 모델을 골라요">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
+      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있어요">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있어요 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 골라요. 높을수록 신중하지만 느리고 사용량이 늘어요">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 골라요">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
       <div id="slash" hidden></div>
       <div class="crow">
         <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈)"></textarea>
@@ -306,6 +315,33 @@ section.on{display:flex}
   <div class="mact"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mYes">확인</button></div>
 </div></div>
 <div id="ctx" hidden></div>
+<div class="modal" id="helpModal" hidden><div class="mbox help" role="dialog" aria-modal="true">
+  <h3>도움말</h3>
+  <h4>단축어(/) 쓰는 법</h4>
+  <p>입력창 맨 앞에 <code>/</code>를 치면 쓸 수 있는 목록이 나와요. ↑↓로 고르고 Tab이나 Enter로 넣은 뒤, 뒤에 하고 싶은 말을 붙여 보내세요. 예: <code>/code-review 최근 변경</code></p>
+  <ul>
+    <li><b>이름:앞글자 형태</b>(예: <code>engineering:debug</code>)는 설치된 플러그인의 기능이에요.</li>
+    <li>직접 만든 단축어는 <code>~/.claude/commands</code>, <code>~/.claude/skills</code> 폴더에서 읽어요.</li>
+    <li>목록은 대화를 한 번 하면 Claude Code가 알려 준 정확한 목록으로 바뀌어요.</li>
+    <li>터미널 전용 명령(<code>/clear</code> <code>/compact</code> <code>/config</code> 등)은 여기서 동작하지 않아서 목록에서 뺐어요. 대신 <b>모델</b>과 <b>생각 깊이</b>는 입력창 위 버튼으로 고르고, 새 대화는 <b>＋ 새 대화</b>로 시작하세요.</li>
+  </ul>
+  <h4>생각 깊이란?</h4>
+  <p>Claude가 답하기 전에 얼마나 깊게 생각할지 정해요. 높을수록 신중하지만 느리고 사용량이 많이 늘어요. 평소엔 <b>기본</b>이면 충분해요.</p>
+  <h4>오류가 났을 때</h4>
+  <ul>
+    <li><b>"로그인이 풀렸어요"</b>: 터미널(Win+R → cmd)에서 <code>claude</code>를 실행하고 <code>/login</code>을 입력해 로그인한 뒤, 뷰어로 돌아와 다시 보내세요.</li>
+    <li><b>"인터넷에 연결되지 않았어요"</b>: 인터넷·VPN·회사 네트워크를 확인하세요. 보내려던 말은 입력창에 돌려놔요.</li>
+    <li><b>"사용량 한도에 걸렸어요"</b>: 한도가 풀릴 때까지 기다리세요. 제목 아래의 한도 사용률(마지막 응답 기준)을 참고하세요.</li>
+    <li><b>"서버가 혼잡해요"</b>: 잠시 뒤에 다시 보내세요.</li>
+    <li><b>모델을 쓸 수 없다는 오류</b>: 계정에 없는 모델일 수 있어요. 모델 버튼에서 <b>기본</b>이나 다른 모델을 고르세요.</li>
+    <li><b>선택 버튼이 안 나와요</b>: Claude가 선택지를 정해진 형식으로 쓰지 않은 경우예요. 입력창에 직접 답하세요.</li>
+    <li><b>웹 검색이 안 돼요</b>: <b>🔎 웹 검색</b> 스위치를 켜세요. 꺼져 있으면 읽기만·파일 수정 모드에서는 막혀요.</li>
+    <li><b>브라우저 연결이 안 돼요</b>: <b>🌐 브라우저</b> 스위치를 켜고, Chrome에 Claude 확장 프로그램이 설치·연결돼 있는지 확인하세요.</li>
+    <li><b>Claude Code가 없다고 나와요</b>: Claude Code를 설치하고 로그인한 뒤 뷰어를 다시 여세요.</li>
+    <li><b>exe가 Windows에 막혀요</b>(애플리케이션 제어 정책): <a href="https://dh-chat-viewer.web.app/python-install.html" target="_blank" rel="noopener">파이썬으로 실행하는 방법</a>을 보세요.</li>
+  </ul>
+  <div class="mact"><button class="btn primary" id="helpClose">닫기</button></div>
+</div></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -560,7 +596,7 @@ $('#bAttach').onclick=async()=>insertPaths(await api_().pick_files());
 const cb=$('#cbox');
 /* 실제 전송 (새 대화/이어 말하기 공통). 성공하면 true */
 async function dispatch(t,files){
-  const r=await api_().send(t,curMode,files,curModel,chromeOn,webOn);if(!r.ok){toast(r.error);return false}
+  const r=await api_().send(t,curMode,files,curModel,chromeOn,webOn,curEffort);if(!r.ok){toast(r.error);return false}
   lastSent=t;pending=t;lastVer=null;
   if(!data)data={msgs:[],files:[],cmds:[],others:[]};
   setRunning(true);renderChat(true);
@@ -624,13 +660,24 @@ $('#bChrome').onclick=async()=>{
   if(!await ask('내 Chrome을 Claude가 조작해도 될까요?','켜면 Claude가 내 Chrome에서 페이지를 열고, 내용을 읽고, 클릭·입력까지 할 수 있어요. 웹 개발 결과를 직접 보고 고치는 데 쓰입니다.\n\n  · 이미 로그인된 사이트에도 접근할 수 있고, 화면 내용은 Anthropic으로 전송돼요\n  · "읽기만" 모드여도 브라우저 조작은 가능해요\n  · Chrome에 Claude 확장 프로그램이 설치·연결돼 있어야 해요\n\n필요할 때만 켜고 끝나면 꺼 주세요. 뷰어를 다시 열면 꺼진 상태로 시작해요.','켜기',true))return;
   chromeOn=true;setChromeBtn();toast('다음 메시지부터 Claude가 Chrome을 쓸 수 있어요')};
 /* ---- 모델 선택 ---- */
+/* ---- 생각 깊이(effort) 선택 / 도움말 ---- */
+let efforts=[],curEffort='';
+function setEffortBtn(){const e=efforts.find(x=>x.id===curEffort);$('#bEffort').textContent='생각 깊이: '+(e?e.label:'기본')+' ▾'}
+$('#bEffort').onclick=ev=>{ev.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
+  mm.innerHTML=efforts.map(x=>`<button data-k="e" data-id="${esc(x.id)}" class="${x.id===curEffort?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
+$('#bHelp').onclick=()=>{$('#helpModal').hidden=false};
+$('#helpClose').onclick=()=>{$('#helpModal').hidden=true};
+$('#helpModal').addEventListener('mousedown',e=>{if(e.target.id==='helpModal')$('#helpModal').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#helpModal').hidden)$('#helpModal').hidden=true});
 let models=[],curModel='';
 function setModelBtn(){const m=models.find(x=>x.id===curModel);$('#bModel').textContent='모델: '+(m?m.label:'기본')+' ▾'}
 $('#bModel').onclick=e=>{e.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
   mm.innerHTML=models.map(x=>`<button data-id="${esc(x.id)}" class="${x.id===curModel?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
-$('#mmenu').onclick=async e=>{const b=e.target.closest('button');if(!b)return;curModel=b.dataset.id;$('#mmenu').hidden=true;setModelBtn();
+$('#mmenu').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.k==='e'){curEffort=b.dataset.id;$('#mmenu').hidden=true;setEffortBtn();await api_().set_setting('effort',curEffort);return toast(curEffort?'다음 메시지부터 생각 깊이를 "'+b.querySelector('b').textContent+'"로 해요':'다음 메시지부터 기본 생각 깊이를 써요')}
+  curModel=b.dataset.id;$('#mmenu').hidden=true;setModelBtn();
   await api_().set_setting('model',curModel);toast(curModel?'다음 메시지부터 '+b.querySelector('b').textContent+' 모델을 써요':'다음 메시지부터 Claude Code 기본 모델을 써요')};
-document.addEventListener('mousedown',e=>{if(!e.target.closest('#mmenu,#bModel'))$('#mmenu').hidden=true});
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#mmenu,#bModel,#bEffort'))$('#mmenu').hidden=true});
 /* ---- 선택 버튼 누르면 그 내용을 답으로 보낸다 ---- */
 $('#chat').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-ch]');if(!b||b.disabled||running)return;
@@ -762,7 +809,7 @@ $('#rz').addEventListener('dblclick',toggleSb);$('#sbClose').onclick=toggleSb;$(
 window.addEventListener('pywebviewready',async()=>{
   try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
-  try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
+  try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
   const init=await api_().get_initial();
   await loadSessions();
   if(init)openSession(init);

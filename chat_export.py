@@ -20,7 +20,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v4.1"
+TITLE = "Claude Code 대화 뷰어 v4.2"
 ICON = BASE / "app.ico"
 
 
@@ -39,6 +39,16 @@ MODELS = [
     {"id": "claude-haiku-5-5", "label": "Haiku 5.5", "desc": "가장 빠르고 가벼워요"},
 ]
 MODEL_IDS = {m["id"] for m in MODELS}
+# 생각 깊이(--effort). 높을수록 신중하지만 느리고 사용량이 많다
+EFFORTS = [
+    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따라요"},
+    {"id": "low", "label": "낮음", "desc": "빠르고 가볍게"},
+    {"id": "medium", "label": "보통", "desc": "무난하게"},
+    {"id": "high", "label": "높음", "desc": "신중하게"},
+    {"id": "xhigh", "label": "매우 높음", "desc": "아주 깊게 (느리고 사용량 많음)"},
+    {"id": "max", "label": "최대", "desc": "끝까지 (가장 느리고 사용량 가장 많음)"},
+]
+EFFORT_IDS = {e["id"] for e in EFFORTS}
 
 # -p 모드에는 선택창(AskUserQuestion)이 없다. 대신 이 형식의 블록을 답 끝에 붙이게 해서 뷰어가 버튼으로 바꿔 그린다.
 CHOICES_PROMPT = (
@@ -564,6 +574,9 @@ class Api:
     def get_models(self):
         return MODELS
 
+    def get_efforts(self):
+        return EFFORTS
+
     def get_limits(self):
         v = read_settings().get("limits")
         return v if isinstance(v, dict) else None
@@ -671,7 +684,7 @@ class Api:
         v = self._ver(path)
         return {"ver": v, "idle": (time.time() - v[0] / 1e9) if v else None}
 
-    def send(self, text, mode, files=None, model=None, chrome=False, web=False):
+    def send(self, text, mode, files=None, model=None, chrome=False, web=False, effort=None):
         text = (text or "").strip()
         if not text:
             return {"ok": False, "error": "빈 메시지입니다"}
@@ -692,6 +705,8 @@ class Api:
             args.append("--chrome")
         if model in MODEL_IDS and model:                  # 목록에 있는 이름만 넘긴다(임의 문자열이 명령줄에 들어가지 않게)
             args += ["--model", model]
+        if effort in EFFORT_IDS and effort:
+            args += ["--effort", effort]
         # 입력창에 넣은 파일이 작업 폴더 밖에 있어도 읽을 수 있게, 그 파일이 있는 폴더만 추가로 허용한다
         dirs = {os.path.dirname(f) for f in files or [] if isinstance(f, str) and os.path.isfile(f)}
         for d in sorted(dirs):
