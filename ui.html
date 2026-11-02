@@ -246,7 +246,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.3</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.4</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -326,6 +326,20 @@ section.on{display:flex}
     <li>목록은 대화를 한 번 하면 Claude Code가 알려 준 정확한 목록으로 바뀌어요.</li>
     <li>터미널 전용 명령(<code>/clear</code> <code>/compact</code> <code>/config</code> 등)은 여기서 동작하지 않아서 목록에서 뺐어요. 대신 <b>모델</b>과 <b>생각 깊이</b>는 입력창 위 버튼으로 고르고, 새 대화는 <b>＋ 새 대화</b>로 시작하세요.</li>
   </ul>
+  <h4>많이 쓰는 단축어</h4>
+  <p>일반적으로 많이 쓰는 순서예요(이 PC의 사용 횟수를 센 건 아니에요). 설치·계정에 따라 없을 수도 있어요.</p>
+  <ul>
+    <li><code>/code-review</code> — 바뀐 코드를 검토해서 버그를 찾아요</li>
+    <li><code>/simplify</code> — 바뀐 코드를 더 간단하고 깔끔하게 정리해요</li>
+    <li><code>/init</code> — 프로젝트 설명 파일(CLAUDE.md)을 만들어요</li>
+    <li><code>/security-review</code> — 바뀐 내용의 보안 점검</li>
+    <li><code>/loop</code> — 일정 간격으로 같은 일을 반복해요</li>
+    <li><code>/schedule</code> — 정해진 시간에 자동으로 실행해요</li>
+    <li><code>/fewer-permission-prompts</code> — 허용 확인 횟수를 줄이는 설정을 제안해요</li>
+    <li><code>/run</code> — 앱을 실행해서 바뀐 게 동작하는지 확인해요</li>
+    <li><code>/claude-api</code> — Claude API·모델 관련 질문</li>
+  </ul>
+  <p>터미널에서 쓰던 명령은 이렇게 바꿔 쓰세요: <code>/model</code> → <b>모델</b> 버튼 · <code>/effort</code> → <b>생각 깊이</b> 버튼 · <code>/clear</code> → <b>＋ 새 대화</b> · <code>/resume</code> → 왼쪽 대화 목록 · <code>/login</code> → 터미널(cmd)의 <code>claude</code>에서 입력</p>
   <h4>확인창 "다음부터 보지 않기"</h4>
   <p>파일 수정·모든 도구 허용·브라우저 켜기를 누를 때 나오는 확인창에서 "다음부터 이 확인창 보지 않기"를 고르면 그 확인창이 다시 나오지 않아요. 허용 범위와 브라우저 스위치는 껐다 켜도 마지막 선택이 유지돼요.</p>
   <h4>생각 깊이란?</h4>
