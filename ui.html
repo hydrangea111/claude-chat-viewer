@@ -101,6 +101,9 @@ section.on{display:flex}
 .msg.user .body{display:flex;flex-direction:column;align-items:flex-end}
 .bubble{padding:11px 16px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
 .msg.claude .bubble{background:var(--panel);border:1px solid var(--line);border-top-left-radius:5px;box-shadow:var(--shadow)}
+.bubble.fold{max-height:13.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.bubble.fold.open{max-height:none;-webkit-mask-image:none}
+.foldbtn{align-self:flex-end;margin:4px 4px 0;border:0;background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:2px 6px;border-radius:6px}.foldbtn:hover{background:var(--chip);color:var(--accent)}
 .msg.user .bubble{background:var(--user);color:#fff;border-top-right-radius:5px}
 .bubble+.bubble,.bubble+.chip,.chip+.bubble,.chip+.chip{margin-top:8px}
 .ts{font-size:11px;color:var(--dim);margin-top:5px}
@@ -290,7 +293,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.6</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.7</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -565,8 +568,9 @@ function renderChat(live){
     const user=m.role==='user';
     let inner='';const msgQs=[];
     for(const p of m.parts){
-      if(p.k==='text'){const sc=user?{text:p.t,ch:null}:splitChoices(p.t);if(sc.text)inner+=`<div class="bubble">${md(sc.text)}</div>`;if(sc.ch)msgQs.push({q:sc.ch.q,opts:sc.ch.opts.map(l=>({label:l,desc:''}))})}
+      if(p.k==='text'){const sc=user?{text:p.t,ch:null}:splitChoices(p.t);if(sc.text){const long=user&&(sc.text.length>500||sc.text.split('\n').length>10);inner+=`<div class="bubble${long?' fold':''}">${md(sc.text)}</div>`+(long?'<button class="foldbtn">펼치기</button>':'')}if(sc.ch)msgQs.push({q:sc.ch.q,opts:sc.ch.opts.map(l=>({label:l,desc:''}))})}
       else if(p.k==='ask'){p.qs.forEach(q=>msgQs.push({q:q.q,opts:q.opts}))}
+      else if(p.k==='compact')inner+=`<div class="chip think"><div class="h"><span class="nm">대화 압축</span><span class="sm">이전 내용을 요약해 이어 갑니다</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`;
       else if(p.k==='thinking')inner+=`<div class="chip think"><div class="h"><span class="nm">생각</span><span class="sm">${esc(p.t.slice(0,80))}</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`;
       else inner+=`<div class="chip${p.err?' err':''}" data-cat="${p.cat}" data-idx="${p.idx}"><div class="h"><span class="nm">${esc(p.name)}</span><span class="sm">${esc(p.sum)}</span><span class="go">펼치기</span></div></div>`;
     }
@@ -582,6 +586,8 @@ function renderChat(live){
   el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
 }
 $('#chat').onclick=async e=>{
+  const fb=e.target.closest('.foldbtn');
+  if(fb){const b=fb.previousElementSibling;b.classList.toggle('open');fb.textContent=b.classList.contains('open')?'접기':'펼치기';return}
   const h=e.target.closest('.chip>.h');if(!h)return;
   const chip=h.parentElement,go=h.querySelector('.go');
   let pre=chip.querySelector('pre');

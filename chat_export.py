@@ -30,7 +30,7 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v4.6"
+TITLE = "Claude Code 대화 뷰어 v4.7"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)

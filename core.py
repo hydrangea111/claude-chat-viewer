@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECTS = Path.home() / ".claude" / "projects"
+COMPACT_HEAD = "This session is being continued from a previous conversation"
 REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
 FILE_TOOLS = {"Write": "생성", "Edit": "수정", "MultiEdit": "수정", "NotebookEdit": "수정", "Read": "읽기"}
 CMD_TOOLS = {"Bash", "PowerShell"}
@@ -54,7 +55,7 @@ def session_info(path):
 
 
 def parse(path, with_reminders=False):
-    """-> dict(msgs, files, cmds, others). msgs: [(role, ts, [(kind, payload)])], kind: text|thinking|tool"""
+    """-> dict(msgs, files, cmds, others). msgs: [(role, ts, [(kind, payload)])], kind: text|thinking|compact|tool"""
     tools, msgs = {}, []
     for r in read_lines(path):
         t = r.get("type")
@@ -87,6 +88,11 @@ def parse(path, with_reminders=False):
                         tool["result"], tool["error"] = str(res), bool(b.get("is_error"))
                     else:
                         parts.append(("text", f"[도구 결과]\n{res}"))
+        if t == "user" and (r.get("isCompactSummary") or any(
+                k == "text" and x.lstrip().startswith(COMPACT_HEAD) for k, x in parts)):
+            # /compact(자동 압축 포함) 뒤에 붙는 요약은 내가 보낸 글이 아니라 Claude Code가 처리한 내용이다
+            parts = [("compact", "\n\n".join(x for k, x in parts if k == "text"))]
+            t = "assistant"
         if not with_reminders:
             parts = [(k, REMINDER_RE.sub("", x).strip() if k == "text" else x) for k, x in parts]
         parts = [(k, x) for k, x in parts if k == "tool" or x.strip()]
