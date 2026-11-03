@@ -33,7 +33,7 @@ exit /b 0
 echo.
 echo  화면을 그리는 pywebview 가 아직 설치되어 있지 않습니다.
 set "ANS="
-set /p ANS= 지금 설치할까요? (Y/N):
+set /p ANS= 지금 설치하시겠습니까? (Y/N):
 if /i not "%ANS%"=="Y" (
   echo  설치하지 않아 종료합니다.
   pause
@@ -42,7 +42,7 @@ if /i not "%ANS%"=="Y" (
 %PYEXE% -m pip install pywebview || %PYEXE% -m pip install --user pywebview
 if errorlevel 1 (
   echo.
-  echo  설치하지 못했습니다. 인터넷 연결을 확인하거나 아래 명령을 직접 실행해 보세요.
+  echo  설치하지 못했습니다. 인터넷 연결을 확인하거나 아래 명령을 직접 실행해 보십시오.
   echo    pip install pywebview
   pause
   exit /b 1
@@ -52,12 +52,12 @@ goto launch
 :nopython
 echo.
 echo  이 PC에서 파이썬을 찾지 못했습니다.
-echo   1. https://www.python.org/downloads/ 에서 파이썬 3 을 설치하세요.
-echo      설치 첫 화면에서 "Add python.exe to PATH" 를 꼭 체크하세요.
-echo   2. 설치가 끝나면 이 파일(run.bat)을 다시 실행하세요.
+echo   1. https://www.python.org/downloads/ 에서 파이썬 3 을 설치하십시오.
+echo      설치 첫 화면에서 "Add python.exe to PATH" 를 꼭 체크하십시오.
+echo   2. 설치가 끝나면 이 파일(run.bat)을 다시 실행하십시오.
 echo.
 set "ANS="
-set /p ANS= 파이썬 내려받기 페이지를 열까요? (Y/N):
+set /p ANS= 파이썬 내려받기 페이지를 여시겠습니까? (Y/N):
 if /i "%ANS%"=="Y" start "" https://www.python.org/downloads/
 pause
 exit /b 1

@@ -7,6 +7,7 @@ import sys
 import shutil
 import socket
 import tempfile
+import urllib.request
 import threading
 import time
 import uuid
@@ -20,7 +21,23 @@ import export
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v4.5"
+TITLE = "Claude Code 대화 뷰어 v4.6"
+APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
+SITE_URL = "https://dh-chat-viewer.web.app/"
+UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
+
+
+def vtuple(v):
+    return tuple(int(x) for x in re.findall(r"\d+", str(v))[:4])
+
+
+def close_splash():
+    """exe 로 열 때 먼저 뜨는 '여는 중' 안내 창을 닫는다(소스로 실행하면 해당 없음)."""
+    try:
+        import pyi_splash
+        pyi_splash.close()
+    except Exception:
+        pass
 ICON = BASE / "app.ico"
 
 
@@ -32,16 +49,16 @@ MODE_ARGS = {
 }
 # 모델 선택 버튼. 이름은 --model 에 그대로 넘긴다(비어 있으면 Claude Code 기본 설정을 따른다)
 MODELS = [
-    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따라요"},
+    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따릅니다"},
     {"id": "claude-fable-5-1", "label": "Fable 5.1", "desc": "가장 똑똑한 모델"},
     {"id": "claude-opus-5-5", "label": "Opus 5.5", "desc": "어려운 일에"},
     {"id": "claude-sonnet-5-5", "label": "Sonnet 5.5", "desc": "빠르고 균형 잡힌 모델"},
-    {"id": "claude-haiku-5-5", "label": "Haiku 5.5", "desc": "가장 빠르고 가벼워요"},
+    {"id": "claude-haiku-5-5", "label": "Haiku 5.5", "desc": "가장 빠르고 가볍습니다"},
 ]
 MODEL_IDS = {m["id"] for m in MODELS}
 # 생각 깊이(--effort). 높을수록 신중하지만 느리고 사용량이 많다
 EFFORTS = [
-    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따라요"},
+    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따릅니다"},
     {"id": "low", "label": "낮음", "desc": "빠르고 가볍게"},
     {"id": "medium", "label": "보통", "desc": "무난하게"},
     {"id": "high", "label": "높음", "desc": "신중하게"},
@@ -527,7 +544,7 @@ class Api:
     def copy_conversation(self):
         """열려 있는 대화의 글(나 / Claude)만 시간 순서대로 클립보드에 복사한다. 도구 호출은 뺀다."""
         if not self._cur:
-            return {"ok": False, "error": "대화를 먼저 선택하세요"}
+            return {"ok": False, "error": "대화를 먼저 선택하십시오"}
         blocks = []
         for role, ts, parts in self._cur["msgs"]:
             text = "\n\n".join(x.strip() for k, x in parts if k == "text" and x.strip())
@@ -535,10 +552,10 @@ class Api:
             if text:
                 blocks.append(f"[{'나' if role == 'user' else 'Claude'}]  {ts}\n{text}")
         if not blocks:
-            return {"ok": False, "error": "복사할 대화 글이 없어요"}
+            return {"ok": False, "error": "복사할 대화 글이 없습니다"}
         out = "\n\n".join(blocks)
         if not clipboard_set(out):
-            return {"ok": False, "error": "클립보드에 복사하지 못했어요"}
+            return {"ok": False, "error": "클립보드에 복사하지 못했습니다"}
         return {"ok": True, "n": len(blocks), "chars": len(out)}
 
     def view_browser(self):
@@ -604,6 +621,28 @@ class Api:
                 login = None
         return {"net": net, "login": login, "claude": bool(exe)}
 
+    def check_update(self):
+        """웹사이트의 version.json 을 읽어 새 버전이 있는지 본다. 보내는 정보는 없다(파일 한 개를 내려받기만 한다)."""
+        if read_settings().get("update_check") is False:
+            return None
+        try:
+            with urllib.request.urlopen(urllib.request.Request(UPDATE_URL, headers={"User-Agent": "ClaudeChatViewer/" + APP_VERSION}), timeout=5) as r:
+                d = json.loads(r.read(4096).decode("utf-8", "replace"))
+            latest = str(d.get("latest", ""))
+            if latest and vtuple(latest) > vtuple(APP_VERSION):
+                return {"latest": latest, "cur": APP_VERSION, "skipped": read_settings().get("update_skip") == latest}
+        except Exception:
+            pass
+        return None
+
+    def open_site(self):
+        """다운로드 페이지를 기본 브라우저로 연다(주소는 코드에 박혀 있고, 받은 파일의 내용으로 바뀌지 않는다)."""
+        try:
+            webbrowser.open(SITE_URL)
+            return True
+        except Exception:
+            return False
+
     def open_login(self):
         """사용자가 누르면 새 콘솔 창에서 Claude Code 를 연다. 거기서 사용자가 /login 을 입력해 로그인한다(로그인 자체는 사용자가 브라우저에서 한다)."""
         exe = find_claude()
@@ -632,7 +671,7 @@ class Api:
         try:
             p = Path(path).resolve()
             if p.suffix != ".jsonl" or core.PROJECTS.resolve() not in p.parents:
-                return {"ok": False, "error": "Claude Code 대화 폴더 밖의 파일은 바꿀 수 없어요"}
+                return {"ok": False, "error": "Claude Code 대화 폴더 밖의 파일은 바꿀 수 없습니다"}
             title = " ".join(str(title or "").split())[:80]
             d = read_settings()
             titles = custom_titles()
@@ -654,9 +693,9 @@ class Api:
             if p.suffix != ".jsonl" or core.PROJECTS.resolve() not in p.parents:
                 return {"ok": False, "error": "Claude Code 대화 폴더 밖의 파일은 삭제하지 않습니다"}
             if self._run and self._run["proc"].poll() is None and self._run.get("path") == str(p):
-                return {"ok": False, "error": "응답 중인 대화는 삭제할 수 없어요"}
+                return {"ok": False, "error": "응답 중인 대화는 삭제할 수 없습니다"}
             if not recycle(str(p)):
-                return {"ok": False, "error": "휴지통으로 옮기지 못했습니다(파일이 사용 중일 수 있어요)"}
+                return {"ok": False, "error": "휴지통으로 옮기지 못했습니다(파일이 사용 중일 수 있습니다)"}
             if self._cur_path and Path(self._cur_path).resolve() == p:
                 self._cur = self._cur_path = None
             return {"ok": True}
@@ -692,7 +731,7 @@ class Api:
             return {"ok": False, "error": "이미 응답을 기다리는 중입니다"}
         exe = find_claude()
         if not exe:
-            return {"ok": False, "error": "claude 명령을 찾을 수 없습니다. Claude Code를 설치하고 로그인해 주세요"}
+            return {"ok": False, "error": "claude 명령을 찾을 수 없습니다. Claude Code를 설치하고 로그인해 주십시오"}
         mode_args = list(MODE_ARGS.get(mode, MODE_ARGS["read"]))
         if "--allowedTools" in mode_args:                 # 켜 둔 기능의 도구만 허용 목록에 더한다(모두 허용 모드는 원래 전부 허용)
             i = mode_args.index("--allowedTools") + 1
@@ -828,12 +867,14 @@ if __name__ == "__main__":
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("dh.claude-chat-viewer")
     if not webview2_installed():  # 없으면 창이 빈 화면이거나 아예 안 뜨므로 먼저 알린다
-        if message_box("화면을 그리는 Microsoft Edge WebView2 런타임을 찾지 못했어요.\n설치 페이지를 열까요?\n(아니오를 누르면 그대로 실행을 시도합니다)", 0x24) == 6:  # MB_YESNO|ICONQUESTION, IDYES
+        close_splash()
+        if message_box("화면을 그리는 Microsoft Edge WebView2 런타임을 찾지 못했습니다.\n설치 페이지를 여시겠습니까?\n(아니오를 누르면 그대로 실행을 시도합니다)", 0x24) == 6:  # MB_YESNO|ICONQUESTION, IDYES
             webbrowser.open(WEBVIEW2_URL)
             sys.exit(0)
     api = Api()
     api._window = webview.create_window(TITLE, (BASE / "ui.html").as_uri(), js_api=api,
                                        width=1280, height=800, min_size=(900, 560), background_color="#0f1115")
+    api._window.events.loaded += close_splash  # 화면이 그려지면 '여는 중' 창을 닫는다
     api._window.events.closed += api.stop  # 창을 닫으면 응답 중이던 claude도 같이 끝낸다
     threading.Thread(target=set_window_icon, daemon=True).start()
     try:  # 파일을 창에 끌어다 놓으면 주소창에 입력되고 열린다(pywebview 5 이상)
@@ -851,5 +892,6 @@ if __name__ == "__main__":
     try:
         webview.start()
     except Exception as e:  # 창을 못 띄우면 조용히 사라지지 않고 이유를 알린다
-        message_box("창을 열지 못했어요.\n\n" + str(e)[:400], 0x10)
+        close_splash()
+        message_box("창을 열지 못했습니다.\n\n" + str(e)[:400], 0x10)
         raise

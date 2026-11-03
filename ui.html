@@ -205,15 +205,52 @@ section.on{display:flex}
 .code .add{background:var(--add)}.code .del{background:var(--del)}.code .hunk{color:var(--accent)}
 .empty{margin:auto;color:var(--dim);text-align:center;padding:40px}
 .empty .big{font-size:38px;margin-bottom:8px;opacity:.6}
+/* 열리는 중 / 새 버전 알림 */
+#boot{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;text-align:center}
+#boot[hidden]{display:none}
+#boot .bb{display:grid;gap:10px;justify-items:center;padding:24px}
+#boot b{font-size:18px}#boot span{color:var(--dim);font-size:13.5px;line-height:1.6}
+#boot .sp{width:34px;height:34px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--accent);animation:bsp 0.9s linear infinite}
+@keyframes bsp{to{transform:rotate(360deg)}}
+#updbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;background:color-mix(in srgb,var(--accent) 14%,var(--bg));border-bottom:1px solid var(--accent);font-size:13px}
+#updbar[hidden]{display:none}
+.help label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);cursor:pointer;margin:6px 0 4px}
+.help label.chk input{width:16px;height:16px;accent-color:var(--accent)}
 /* 모델 선택 / 단축어 자동완성 / 선택 버튼 / 연결 알림 */
 #bEffort{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
 #bEffort:hover{color:var(--text);border-color:var(--accent)}
-#helpModal .mbox{max-width:680px;max-height:82vh;overflow:auto;text-align:left}
-.help h4{margin:16px 0 6px;font-size:14px}
-.help p,.help li{font-size:13px;color:var(--dim);margin:3px 0}
-.help ul{margin:4px 0 4px 18px;padding:0}
+#helpModal .mbox{max-width:780px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:0;overflow:hidden;text-align:left}
+.help .hhead{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 6px}
+.help .hhead h3{margin:0;font-size:19px}
+.help .hx{border:0;background:transparent;color:var(--dim);font-size:18px;cursor:pointer;border-radius:8px;width:32px;height:32px}
+.help .hx:hover{background:var(--chip);color:var(--text)}
+.help .htabs{display:flex;gap:6px;padding:8px 24px 0;border-bottom:1px solid var(--line)}
+.help .htabs button{border:0;background:transparent;color:var(--dim);font-size:14px;font-weight:600;padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.help .htabs button:hover{color:var(--text)}
+.help .htabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.help .hbody{overflow:auto;padding:6px 24px 8px;flex:1}
+.help .hp{display:none}.help .hp.on{display:block}
+.help h4{margin:22px 0 10px;font-size:15px;color:var(--text)}
+.help .hp>h4:first-child{margin-top:16px}
+.help p,.help li{font-size:14px;line-height:1.75;color:var(--dim);margin:0 0 8px;white-space:normal}
 .help b{color:var(--text)}
-.help code{background:var(--chip);border-radius:5px;padding:0 5px}
+.help code{background:var(--chip);border-radius:6px;padding:1px 7px;font-size:13px;color:var(--text)}
+.help .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 10px;padding:0;list-style:none}
+.help .steps li{background:var(--chip);border-radius:12px;padding:12px 14px;margin:0;font-size:13.5px;line-height:1.6}
+.help .steps li i{display:block;font-style:normal;font-weight:700;color:var(--accent);margin-bottom:2px}
+.help .rows{display:grid;grid-template-columns:max-content 1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:6px 0 10px}
+.help .rows>*{padding:9px 14px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.6;margin:0}
+.help .rows>*:nth-last-child(-n+2){border-bottom:0}
+.help .rows>span:nth-child(odd){background:var(--chip);color:var(--text);white-space:nowrap}
+.help .rows>span:nth-child(even){color:var(--dim)}
+.help .errs{display:grid;gap:10px;margin:8px 0 12px}
+.help .ec{border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.help .ec b{display:block;margin-bottom:3px;font-size:14.5px}
+.help .ec span{font-size:14px;line-height:1.7;color:var(--dim)}
+.help .tip{background:var(--chip);border-radius:12px;padding:12px 16px;margin:10px 0;font-size:14px;line-height:1.7;color:var(--dim)}
+.help pre.lic{white-space:pre-wrap;background:var(--chip);border-radius:12px;padding:14px 16px;font:12.5px/1.65 Consolas,"Cascadia Mono",monospace;color:var(--dim);margin:8px 0 12px;overflow-wrap:anywhere}
+.help .hfoot{display:flex;justify-content:flex-end;padding:12px 24px 16px;border-top:1px solid var(--line)}
+@media(max-width:640px){.help .steps{grid-template-columns:1fr}}
 .mrow{display:flex;align-items:center;gap:8px;position:relative}
 .mrow .sp{flex:1}
 #bWeb{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
@@ -251,7 +288,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 돼요)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.6</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -267,12 +304,13 @@ section.on{display:flex}
 <div id="rz" title="끌어서 크기 조절 · 더블클릭: 접기/펼치기"></div>
 <button class="sbtn" id="sbOpen" title="사이드바 펼치기"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
 <main>
+  <div id="updbar" hidden><span id="updTxt"></span><button class="btn sm primary" id="updGo">내려받기</button><button class="btn sm" id="updClose" title="이 버전 알림은 다시 띄우지 않습니다">닫기</button></div>
   <div id="alertbar" hidden><span id="alertTxt"></span><button class="btn sm" id="alertFix">해결 방법</button><button class="btn sm" id="alertRe">다시 확인</button></div>
   <header>
     <div class="top">
-      <h1 id="title">대화를 선택하세요<div class="sub" id="sub"></div><div class="sub" id="usage"></div></h1>
+      <h1 id="title">대화를 선택하십시오<div class="sub" id="sub"></div><div class="sub" id="usage"></div></h1>
       <div class="actions">
-        <label class="switch" title="Claude Code가 메시지에 몰래 끼워 넣는 안내문(system-reminder)을 대화에 함께 보여줘요. 평소엔 꺼 두세요."><input type="checkbox" id="rem"><i></i>시스템 안내문</label>
+        <label class="switch" title="Claude Code가 메시지에 몰래 끼워 넣는 안내문(system-reminder)을 대화에 함께 보여 줍니다. 평소엔 꺼 두십시오."><input type="checkbox" id="rem"><i></i>시스템 안내문</label>
         <button class="btn" id="bCopyAll" title="이 대화의 글을 모두 복사 (도구 호출은 제외)">대화 복사</button>
         <button class="btn" id="bBrowser">브라우저로 보기</button>
         <button class="btn" id="bHtml">HTML 저장</button>
@@ -293,14 +331,14 @@ section.on{display:flex}
   <div class="composer" id="composer">
     <div class="cbox" id="cbox">
       <div class="cattach">
-        <button class="btn sm" id="bAttach" title="Claude가 읽을 파일을 골라 경로를 입력창에 넣어요"><svg class="icon" viewBox="0 0 24 24"><path d="m21 11-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/></svg>파일 주소 넣기</button>
-        <span>파일을 고르거나 이 칸에 끌어다 놓으면 경로가 입력창에 들어가요</span>
+        <button class="btn sm" id="bAttach" title="Claude가 읽을 파일을 골라 경로를 입력창에 넣습니다"><svg class="icon" viewBox="0 0 24 24"><path d="m21 11-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/></svg>파일 주소 넣기</button>
+        <span>파일을 고르거나 이 칸에 끌어다 놓으면 경로가 입력창에 들어갑니다</span>
       </div>
       <div class="mrow"><div class="cmode" id="cmode" role="group" aria-label="허용 범위">
         <button data-m="read" class="on" title="파일 읽기·검색만 허용">읽기만</button>
         <button data-m="edit" title="파일 수정까지 허용">파일 수정</button>
         <button data-m="all" title="명령 실행까지 전부 허용 (주의)">모두 허용</button>
-      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있어요">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있어요 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 골라요. 높을수록 신중하지만 느리고 사용량이 늘어요">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 골라요">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
+      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
       <div id="slash" hidden></div>
       <div class="crow">
         <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈)"></textarea>
@@ -321,49 +359,107 @@ section.on{display:flex}
   <div class="mact"><button class="btn" id="mNo">취소</button><button class="btn primary" id="mYes">확인</button></div>
 </div></div>
 <div id="ctx" hidden></div>
-<div class="modal" id="helpModal" hidden><div class="mbox help" role="dialog" aria-modal="true">
-  <h3>도움말</h3>
-  <h4>단축어(/) 쓰는 법</h4>
-  <p>입력창 맨 앞에 <code>/</code>를 치면 쓸 수 있는 목록이 나와요. ↑↓로 고르고 Tab이나 Enter로 넣은 뒤, 뒤에 하고 싶은 말을 붙여 보내세요. 예: <code>/code-review 최근 변경</code></p>
-  <ul>
-    <li><b>이름:앞글자 형태</b>(예: <code>engineering:debug</code>)는 설치된 플러그인의 기능이에요.</li>
-    <li>직접 만든 단축어는 <code>~/.claude/commands</code>, <code>~/.claude/skills</code> 폴더에서 읽어요.</li>
-    <li>목록은 대화를 한 번 하면 Claude Code가 알려 준 정확한 목록으로 바뀌어요.</li>
-    <li>터미널 전용 명령(<code>/clear</code> <code>/compact</code> <code>/config</code> 등)은 여기서 동작하지 않아서 목록에서 뺐어요. 대신 <b>모델</b>과 <b>생각 깊이</b>는 입력창 위 버튼으로 고르고, 새 대화는 <b>＋ 새 대화</b>로 시작하세요.</li>
-  </ul>
-  <h4>많이 쓰는 단축어</h4>
-  <p>일반적으로 많이 쓰는 순서예요(이 PC의 사용 횟수를 센 건 아니에요). 설치·계정에 따라 없을 수도 있어요.</p>
-  <ul>
-    <li><code>/code-review</code> — 바뀐 코드를 검토해서 버그를 찾아요</li>
-    <li><code>/simplify</code> — 바뀐 코드를 더 간단하고 깔끔하게 정리해요</li>
-    <li><code>/init</code> — 프로젝트 설명 파일(CLAUDE.md)을 만들어요</li>
-    <li><code>/security-review</code> — 바뀐 내용의 보안 점검</li>
-    <li><code>/loop</code> — 일정 간격으로 같은 일을 반복해요</li>
-    <li><code>/schedule</code> — 정해진 시간에 자동으로 실행해요</li>
-    <li><code>/fewer-permission-prompts</code> — 허용 확인 횟수를 줄이는 설정을 제안해요</li>
-    <li><code>/run</code> — 앱을 실행해서 바뀐 게 동작하는지 확인해요</li>
-    <li><code>/claude-api</code> — Claude API·모델 관련 질문</li>
-  </ul>
-  <p>터미널에서 쓰던 명령은 이렇게 바꿔 쓰세요: <code>/model</code> → <b>모델</b> 버튼 · <code>/effort</code> → <b>생각 깊이</b> 버튼 · <code>/clear</code> → <b>＋ 새 대화</b> · <code>/resume</code> → 왼쪽 대화 목록 · <code>/login</code> → 터미널(cmd)의 <code>claude</code>에서 입력</p>
-  <h4>확인창 "다음부터 보지 않기"</h4>
-  <p>파일 수정·모든 도구 허용·브라우저 켜기를 누를 때 나오는 확인창에서 "다음부터 이 확인창 보지 않기"를 고르면 그 확인창이 다시 나오지 않아요. 허용 범위와 브라우저 스위치는 껐다 켜도 마지막 선택이 유지돼요.</p>
-  <h4>생각 깊이란?</h4>
-  <p>Claude가 답하기 전에 얼마나 깊게 생각할지 정해요. 높을수록 신중하지만 느리고 사용량이 많이 늘어요. 평소엔 <b>기본</b>이면 충분해요.</p>
-  <h4>오류가 났을 때</h4>
-  <ul>
-    <li><b>"로그인이 풀렸어요"</b>: 터미널(Win+R → cmd)에서 <code>claude</code>를 실행하고 <code>/login</code>을 입력해 로그인한 뒤, 뷰어로 돌아와 다시 보내세요.</li>
-    <li><b>"인터넷에 연결되지 않았어요"</b>: 인터넷·VPN·회사 네트워크를 확인하세요. 보내려던 말은 입력창에 돌려놔요.</li>
-    <li><b>"사용량 한도에 걸렸어요"</b>: 한도가 풀릴 때까지 기다리세요. 제목 아래의 한도 사용률(마지막 응답 기준)을 참고하세요.</li>
-    <li><b>"서버가 혼잡해요"</b>: 잠시 뒤에 다시 보내세요.</li>
-    <li><b>모델을 쓸 수 없다는 오류</b>: 계정에 없는 모델일 수 있어요. 모델 버튼에서 <b>기본</b>이나 다른 모델을 고르세요.</li>
-    <li><b>선택 버튼이 안 나와요</b>: Claude가 선택지를 정해진 형식으로 쓰지 않은 경우예요. 입력창에 직접 답하세요.</li>
-    <li><b>웹 검색이 안 돼요</b>: <b>🔎 웹 검색</b> 스위치를 켜세요. 꺼져 있으면 읽기만·파일 수정 모드에서는 막혀요.</li>
-    <li><b>브라우저 연결이 안 돼요</b>: <b>🌐 브라우저</b> 스위치를 켜고, Chrome에 Claude 확장 프로그램이 설치·연결돼 있는지 확인하세요.</li>
-    <li><b>Claude Code가 없다고 나와요</b>: Claude Code를 설치하고 로그인한 뒤 뷰어를 다시 여세요.</li>
-    <li><b>exe가 Windows에 막혀요</b>(애플리케이션 제어 정책): <a href="https://dh-chat-viewer.web.app/python-install.html" target="_blank" rel="noopener">파이썬으로 실행하는 방법</a>을 보세요.</li>
-  </ul>
-  <div class="mact"><button class="btn primary" id="helpClose">닫기</button></div>
+<div class="modal" id="helpModal" hidden><div class="mbox help" role="dialog" aria-modal="true" aria-label="도움말">
+  <div class="hhead"><h3>도움말</h3><button class="hx" id="helpX" aria-label="닫기" title="닫기">✕</button></div>
+  <div class="htabs" role="tablist"><button class="on" data-p="cmd">단축어</button><button data-p="err">문제 해결</button><button data-p="set">설정 안내</button><button data-p="lic">라이선스</button></div>
+  <div class="hbody">
+  <section class="hp on" id="hp-cmd">
+    <h4>단축어(/) 쓰는 법</h4>
+    <ol class="steps"><li><i>1</i>입력창 맨 앞에 <code>/</code> 를 치면 목록이 나옵니다</li><li><i>2</i><code>↑</code><code>↓</code> 로 고르고 <code>Tab</code> 이나 <code>Enter</code> 로 넣습니다</li><li><i>3</i>뒤에 하고 싶은 말을 붙여 보냅니다<br>예: <code>/code-review 최근 변경</code></li></ol>
+    <h4>많이 쓰는 단축어</h4>
+    <p>일반적으로 많이 쓰는 순서입니다(이 PC의 사용 횟수를 센 건 아닙니다). 설치·계정에 따라 없을 수도 있습니다.</p>
+    <div class="rows">
+      <span><code>/code-review</code></span><span>바뀐 코드를 검토해서 버그를 찾습니다</span>
+      <span><code>/simplify</code></span><span>바뀐 코드를 더 간단하고 깔끔하게 정리합니다</span>
+      <span><code>/init</code></span><span>프로젝트 설명 파일(CLAUDE.md)을 만듭니다</span>
+      <span><code>/security-review</code></span><span>바뀐 내용의 보안 점검</span>
+      <span><code>/loop</code></span><span>일정 간격으로 같은 일을 반복합니다</span>
+      <span><code>/schedule</code></span><span>정해진 시간에 자동으로 실행합니다</span>
+      <span><code>/fewer-permission-prompts</code></span><span>허용 확인 횟수를 줄이는 설정을 제안합니다</span>
+      <span><code>/run</code></span><span>앱을 실행해서 바뀐 게 동작하는지 확인합니다</span>
+      <span><code>/claude-api</code></span><span>Claude API·모델 관련 질문</span>
+    </div>
+    <h4>터미널 명령은 이렇게 바꿔 쓰십시오</h4>
+    <div class="rows">
+      <span><code>/model</code></span><span>입력창 위의 <b>모델</b> 버튼</span>
+      <span><code>/effort</code></span><span>입력창 위의 <b>생각 깊이</b> 버튼</span>
+      <span><code>/clear</code></span><span>왼쪽 위의 <b>＋ 새 대화</b></span>
+      <span><code>/resume</code></span><span>왼쪽 대화 목록에서 고르기</span>
+      <span><code>/login</code></span><span>터미널(cmd)에서 <code>claude</code> 를 실행한 뒤 입력</span>
+    </div>
+    <div class="tip"><b>알아 두면 좋습니다</b><br><code>이름:앞글자</code> 형태(예: <code>engineering:debug</code>)는 설치된 플러그인의 기능입니다. 직접 만든 단축어는 <code>~/.claude/commands</code>, <code>~/.claude/skills</code> 폴더에서 읽고, 대화를 한 번 하면 Claude Code가 알려 준 정확한 목록으로 바뀝니다. 터미널 전용 명령(<code>/compact</code> <code>/config</code> 등)은 여기서 동작하지 않아 목록에서 뺐습니다.</div>
+  </section>
+  <section class="hp" id="hp-err">
+    <h4>메시지가 떴을 때</h4>
+    <div class="errs">
+      <div class="ec"><b>"로그인이 풀렸습니다"</b><span>터미널(Win+R → cmd)에서 <code>claude</code> 를 실행하고 <code>/login</code> 을 입력해 로그인한 뒤, 뷰어로 돌아와 다시 보내십시오.</span></div>
+      <div class="ec"><b>"인터넷에 연결되지 않았습니다"</b><span>인터넷·VPN·회사 네트워크를 확인하십시오. 보내려던 말은 입력창에 돌려놓습니다.</span></div>
+      <div class="ec"><b>"사용량 한도에 걸렸습니다"</b><span>한도가 풀릴 때까지 기다리십시오. 제목 아래 <b>한도</b> 줄(마지막 응답 기준)을 참고하십시오.</span></div>
+      <div class="ec"><b>"서버가 혼잡합니다"</b><span>잠시 뒤에 다시 보내십시오.</span></div>
+      <div class="ec"><b>모델을 쓸 수 없다는 오류</b><span>계정에 없는 모델일 수 있습니다. 모델 버튼에서 <b>기본</b>이나 다른 모델을 고르십시오.</span></div>
+    </div>
+    <h4>기능이 안 될 때</h4>
+    <div class="errs">
+      <div class="ec"><b>선택 버튼이 안 나옵니다</b><span>Claude가 선택지를 정해진 형식으로 쓰지 않은 경우입니다. 입력창에 직접 답하십시오.</span></div>
+      <div class="ec"><b>웹 검색이 안 됩니다</b><span><b>웹 검색</b> 스위치를 켜십시오. 꺼져 있으면 읽기만·파일 수정 모드에서는 막힙니다.</span></div>
+      <div class="ec"><b>브라우저 연결이 안 됩니다</b><span><b>브라우저</b> 스위치를 켜고, Chrome에 Claude 확장 프로그램이 설치·연결돼 있는지 확인하십시오.</span></div>
+      <div class="ec"><b>Claude Code가 없다고 나옵니다</b><span>Claude Code를 설치하고 로그인한 뒤 뷰어를 다시 여십시오. <a href="https://dh-chat-viewer.web.app/claude-install.html" target="_blank" rel="noopener">설치하는 방법</a></span></div>
+      <div class="ec"><b>exe가 Windows에 막힙니다</b><span>"애플리케이션 제어 정책…"으로 막히면 <a href="https://dh-chat-viewer.web.app/python-install.html" target="_blank" rel="noopener">Python으로 실행하는 방법</a>을 보십시오.</span></div>
+      <div class="ec"><b>창이 늦게 뜹니다</b><span>PC가 느리거나 처음 실행할 때는 최대 수십 초 걸릴 수 있습니다. 잠시 기다려 주십시오.</span></div>
+    </div>
+  </section>
+  <section class="hp" id="hp-set">
+    <h4>허용 범위</h4>
+    <p><b>읽기만</b>은 파일을 읽고 검색만 합니다. <b>파일 수정</b>은 이 대화의 폴더 안에서 파일을 만들고 고칠 수 있습니다. <b>모두 허용</b>은 확인 없이 파일 수정과 명령 실행까지 합니다. 믿을 수 있는 폴더에서만 쓰십시오.</p>
+    <h4>생각 깊이</h4>
+    <p>Claude가 답하기 전에 얼마나 깊게 생각할지 정합니다. 높을수록 신중하지만 느리고 사용량이 많이 늡니다. 평소엔 <b>기본</b>이면 충분합니다.</p>
+    <h4>"다음부터 보지 않기"</h4>
+    <p>파일 수정·모든 도구 허용·브라우저 켜기를 누를 때 나오는 확인창에서 "다음부터 이 확인창 보지 않기"를 고르면 그 확인창이 다시 나오지 않습니다.</p>
+    <h4>기억되는 설정</h4>
+    <p>허용 범위, 웹 검색, 브라우저, 모델, 생각 깊이는 뷰어를 껐다 켜도 마지막 선택이 유지됩니다.</p>
+    <h4>새 버전 알림</h4>
+    <p>시작할 때 웹사이트의 작은 파일(version.json) 하나를 내려받아 새 버전이 있는지만 확인합니다. 내 정보는 보내지 않습니다. 새 버전이 있으면 위에 안내 줄이 뜹니다.</p>
+    <label class="chk"><input type="checkbox" id="updChk"> 시작할 때 새 버전이 있는지 확인하기</label>
+    <h4>토큰·한도 줄</h4>
+    <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다.</p>
+  </section>
+  <section class="hp" id="hp-lic">
+    <h4>이 프로그램</h4>
+    <p><b>Claude Code 대화 뷰어</b>는 MIT 라이선스로 공개된 프로그램입니다. 자유롭게 쓰고, 고치고, 나눠 줄 수 있습니다(저작권 표시와 아래 문구를 함께 두는 조건).</p>
+<pre class="lic">MIT License
+
+Copyright (c) 2026 hydrangea111
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+    <h4>함께 쓰인 오픈소스</h4>
+    <div class="rows">
+      <span>Python</span><span>PSF License</span>
+      <span>pywebview</span><span>BSD 3-Clause</span>
+      <span>PyInstaller</span><span>GPL 2.0 (예외 조항: 묶어 만든 프로그램은 다른 라이선스로 배포 가능)</span>
+    </div>
+    <p>화면을 그리는 Microsoft Edge WebView2는 Windows에 설치된 Microsoft 구성 요소이고, 이 프로그램에 포함돼 있지 않습니다(Microsoft 라이선스).</p>
+    <div class="tip"><b>Anthropic과의 관계</b><br>이 프로그램은 개인이 만든 <b>비공식</b> 도구로 Anthropic과 관련이 없습니다. Claude와 Claude Code는 Anthropic의 제품이고, 사용할 때는 Anthropic의 약관이 적용됩니다.</div>
+  </section>
+  </div>
+  <div class="hfoot"><button class="btn primary" id="helpClose">닫기</button></div>
 </div></div>
+<div id="boot"><div class="bb"><div class="sp"></div><b>여는 중입니다…</b><span>대화 목록을 불러오고 있습니다.<br>PC가 느리면 조금 걸릴 수 있으니 잠시만 기다려 주십시오.</span></div></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -396,7 +492,7 @@ function renderSessions(){
 $('#sessions').onclick=e=>{const d=e.target.closest('.del');if(d){e.stopPropagation();return delSession(+d.dataset.del)}
   const rn=e.target.closest('.ren');if(rn){e.stopPropagation();return renameSession(+rn.dataset.ren)}
   const c=e.target.closest('.card');if(!c)return;
-  if(running||queue.length)return toast('응답 중이거나 예약된 메시지가 있으면 다른 대화로 바꿀 수 없어요');
+  if(running||queue.length)return toast('응답 중이거나 예약된 메시지가 있으면 다른 대화로 바꿀 수 없습니다');
   openSession(sessions[+c.dataset.i])};
 $('#q').oninput=renderSessions;
 
@@ -428,14 +524,20 @@ function splitChoices(t){
   return {text:t,ch:null}}
 function choiceHtml(qs,mi,active){
   return '<div class="choices">'+qs.map((q,qi)=>`<div class="cq">${q.q?`<div class="ct">${esc(q.q)}</div>`:''}<div class="co">${q.opts.map((o,oi)=>`<button class="cbtn" data-ch="${mi}:${qi}:${oi}"${active?'':' disabled'}${o.desc?` title="${esc(o.desc)}"`:''}><b>${esc(o.label)}</b>${o.desc?`<span>${esc(o.desc)}</span>`:''}</button>`).join('')}</div></div>`).join('')
-    +(active?'<div class="chint2">버튼을 누르거나 아래 입력창에 직접 답해도 돼요</div>':'')+'</div>'}
+    +(active?'<div class="chint2">버튼을 누르거나 아래 입력창에 직접 답해도 됩니다</div>':'')+'</div>'}
 /* ---- 토큰 사용량: 이 대화 합계 + 전체 한도 대비(마지막으로 받은 값) ---- */
 let limits=null;
 const nfmt=n=>n>=100000000?(n/100000000).toFixed(1)+'억':n>=10000?(n/10000).toFixed(1)+'만':n.toLocaleString();
 function renderUsage(){
-  const u=data&&data.usage,parts=[];
+  const u=data&&data.usage,parts=[],tips=[];
   if(u&&u.turns){
     parts.push(`<b>토큰</b>  입력 ${nfmt(u.in+u.cache_new)} · 출력 ${nfmt(u.out)} · 캐시 ${nfmt(u.cache_read)}`);
+    const L=n=>Number(n).toLocaleString();
+    tips.push('이 대화에서 쓴 토큰의 정확한 수입니다.\n'
+      +'입력: '+L(u.in+u.cache_new)+'  (새로 보낸 '+L(u.in)+' + 캐시에 새로 저장한 '+L(u.cache_new)+')\n'
+      +'출력: '+L(u.out)+'  (Claude가 쓴 글)\n'
+      +'캐시 읽기: '+L(u.cache_read)+'  (이미 저장된 내용을 다시 읽은 양)\n'
+      +'응답 횟수: '+L(u.turns)+'회');
   }
   const w=limits&&limits.windows;
   if(w){
@@ -448,9 +550,11 @@ function renderUsage(){
     if(a||b){
       const m=limits.at?Math.max(0,Math.round((now/1000-limits.at)/60)):null;
       const ago=m===null?'':m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전';
-      parts.push('<b>한도</b>  '+[a,b].filter(Boolean).join(' · ')+(ago?'  · '+ago+' 기준':''))}
+      parts.push('<b>한도</b>  '+[a,b].filter(Boolean).join(' · ')+(ago?'  · '+ago+' 기준':''));
+      const pc=k=>{const x=w[k];return x&&typeof x.u==='number'?(x.u*100).toFixed(1)+'%':'알 수 없음'};
+      tips.push('계정 전체의 사용량 한도입니다.\n5시간 한도: '+pc('five_hour')+'\n7일 한도: '+pc('seven_day')+'\n마지막 응답을 받은 시점의 값이라, 대화하지 않는 동안에는 갱신되지 않습니다.')}
   }
-  $('#usage').innerHTML=parts.map(x=>'<div>'+x+'</div>').join('');
+  $('#usage').innerHTML=parts.map((x,i)=>'<div title="'+esc(tips[i]||'')+'">'+x+'</div>').join('');
 }
 async function loadLimits(){try{limits=await api_().get_limits()}catch(e){}renderUsage()}
 function renderChat(live){
@@ -474,7 +578,7 @@ function renderChat(live){
   if(pending&&!data.msgs.slice(-6).some(m=>m.role==='user'&&m.parts.some(p=>p.k==='text'&&p.t.trim()===pending)))
     h+=`<div class="msg user"><div class="av">나</div><div class="body"><div class="bubble">${md(pending)}</div></div></div>`;
   if(running)h+='<div class="msg claude"><div class="av">C</div><div class="body"><div class="bubble typing"><i></i><i></i><i></i></div></div></div>';
-  queue.forEach((it,i)=>{h+=`<div class="msg user queued"><div class="av">나</div><div class="body"><div class="bubble">${md(it.text)}</div><div class="qtag">응답이 끝나면 보내요 <button data-q="${i}">취소</button></div></div></div>`});
+  queue.forEach((it,i)=>{h+=`<div class="msg user queued"><div class="av">나</div><div class="body"><div class="bubble">${md(it.text)}</div><div class="qtag">응답이 끝나면 보냅니다 <button data-q="${i}">취소</button></div></div></div>`});
   if(!data.msgs.length&&!pending&&!queue.length)h+='<div class="empty"><div class="big">💬</div>아래 입력창에 쓰면 Claude Code와 새 대화를 시작합니다</div>';
   el.innerHTML=h+'</div>';
   el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
@@ -534,11 +638,11 @@ $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
 $('#jump').classList.add('on');
 $('#bTop').onclick=()=>$('#chat').scrollTo({top:0,behavior:'smooth'});
 $('#bBottom').onclick=()=>$('#chat').scrollTo({top:$('#chat').scrollHeight,behavior:'smooth'});
-const need=fn=>async()=>{if(!data)return toast('대화를 먼저 선택하세요');fn()};
+const need=fn=>async()=>{if(!data)return toast('대화를 먼저 선택하십시오');fn()};
 $('#bHtml').onclick=need(async()=>{const p=await api_().save('html');if(p)toast('저장됨: '+p)});
 $('#bTxt').onclick=need(async()=>{const p=await api_().save('txt');if(p)toast('저장됨: '+p)});
 $('#bBrowser').onclick=need(()=>api_().view_browser());
-$('#bCopyAll').onclick=need(async()=>{const r=await api_().copy_conversation();toast(r.ok?`대화 ${r.n}개 메시지를 복사했어요`:r.error)});
+$('#bCopyAll').onclick=need(async()=>{const r=await api_().copy_conversation();toast(r.ok?`대화 ${r.n}개 메시지를 복사했습니다`:r.error)});
 $('#bRefresh').onclick=loadSessions;
 /* 파일을 창 어디에 놓아도 경로가 입력창에 들어간다 (실제 경로는 파이썬 쪽 drop 핸들러가 dropOpen으로 전달) */
 window.addEventListener('dragover',e=>{e.preventDefault();cb.classList.add('drop')});
@@ -551,11 +655,11 @@ $('#bTheme').onclick=()=>{const r=document.documentElement,d=getComputedStyle(r)
 /* ---- 입력창: 설치된 Claude Code로 이어서 말하기 ---- */
 let queue=[],userStopped=false,ticking=false,lastSent='',lastModel='';
 let running=false,pending=null,pollTimer=null,lastVer=null,claudeOk=false,curMode='read',workDir=null,newCwd=null;
-const MODE_HINT={read:'파일 읽기·검색만 허용합니다. 수정이나 명령 실행은 거절돼요.',edit:'파일 수정까지 허용합니다. 명령 실행은 거절돼요.',all:'⚠ 모든 도구를 확인 없이 실행합니다. 내 PC 파일을 바꿀 수 있어요.'};
+const MODE_HINT={read:'파일 읽기·검색만 허용합니다. 수정이나 명령 실행은 거절됩니다.',edit:'파일 수정까지 허용합니다. 명령 실행은 거절됩니다.',all:'⚠ 모든 도구를 확인 없이 실행합니다. 내 PC 파일을 바꿀 수 있습니다.'};
 function setHint(){
-  if(!claudeOk){$('#chint').textContent='Claude Code가 설치돼 있어야 사용할 수 있어요. 설치하고 로그인한 뒤 뷰어를 다시 열어 주세요.';return}
+  if(!claudeOk){$('#chint').textContent='Claude Code가 설치돼 있어야 사용할 수 있습니다. 설치하고 로그인한 뒤 뷰어를 다시 열어 주십시오.';return}
   const where=cur?workDir:newCwd;
-  if(running){$('#chint').textContent='응답 중이에요. 지금 쓰는 메시지는 응답이 끝나면 자동으로 이어서 보내요 · 중지하면 입력창으로 돌아와요';$('#chint').style.cursor='';return}
+  if(running){$('#chint').textContent='응답 중입니다. 지금 쓰는 메시지는 응답이 끝나면 자동으로 이어서 보냅니다 · 중지하면 입력창으로 돌아옵니다';$('#chint').style.cursor='';return}
   $('#chint').textContent=(where?'📁 '+where:!cur?'📁 기본 폴더(내 사용자 폴더) · 눌러서 바꾸기':'')+(where||!cur?'  ·  ':'')+MODE_HINT[curMode]+(lastModel?' · 최근 응답 모델: '+lastModel:'');
   $('#chint').style.cursor=cur?'':'pointer';
 }
@@ -575,7 +679,7 @@ function ask0(title,body,yes,danger,canSkip){return new Promise(res=>{
   document.addEventListener('keydown',key,true);y.onclick=()=>done(true);n.onclick=()=>done(false)})}
 async function ensureConsent(){
   if(await api_().get_setting('consent'))return true;
-  const ok=await ask('이 PC에 접속해도 될까요?','Claude Code가 이 PC의 파일을 읽을 수 있게 됩니다.\n입력한 말과 Claude가 읽은 파일 내용은 Anthropic으로 전송돼요.\n\n처음에는 "읽기만" 모드라서 파일을 바꾸거나 명령을 실행하지 못해요. 입력창 위의 버튼으로 범위를 바꿀 수 있습니다.','허용');
+  const ok=await ask('이 PC에 접속해도 되겠습니까?','Claude Code가 이 PC의 파일을 읽을 수 있게 됩니다.\n입력한 말과 Claude가 읽은 파일 내용은 Anthropic으로 전송됩니다.\n\n처음에는 "읽기만" 모드라서 파일을 바꾸거나 명령을 실행하지 못합니다. 입력창 위의 버튼으로 범위를 바꿀 수 있습니다.','허용');
   if(ok)await api_().set_setting('consent',true);return ok}
 function setRunning(v){running=v;$('#bStop').hidden=!v;$('#bSend').textContent=v?'다음에 보내기':'보내기';$('#msg').disabled=!claudeOk;$('#bSend').disabled=!claudeOk;if(!v&&claudeOk)$('#msg').focus();setHint()}
 function autosize(){const t=$('#msg');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,160)+'px'}
@@ -606,8 +710,8 @@ async function tick(){
       }else toast('오류: '+p.error)}
     // 대기열: 정상 종료면 다음 메시지를 자동으로 보내고, 중지했거나 오류면 입력창으로 되돌려 잃어버리지 않게 한다
     if(queue.length){
-      if(p.error||userStopped)restoreQueue(userStopped?'중지해서 예약한 메시지를 입력창으로 돌려놨어요':'오류가 나서 예약한 메시지를 입력창으로 돌려놨어요');
-      else{const it=queue.shift();if(!await dispatch(it.text,it.files)){queue.unshift(it);restoreQueue('예약한 메시지를 보내지 못해 입력창으로 돌려놨어요')}}
+      if(p.error||userStopped)restoreQueue(userStopped?'중지해서 예약한 메시지를 입력창으로 돌려놨습니다':'오류가 나서 예약한 메시지를 입력창으로 돌려놨습니다');
+      else{const it=queue.shift();if(!await dispatch(it.text,it.files)){queue.unshift(it);restoreQueue('예약한 메시지를 보내지 못해 입력창으로 돌려놨습니다')}}
     }
     userStopped=false;
   }finally{ticking=false}
@@ -647,7 +751,7 @@ async function send(){
     renderChat(true);$('#chat').scrollTop=$('#chat').scrollHeight;return}
   if(alertKind){await checkHealth(true);if(alertKind){await problem(alertKind);return}}   // 로그인/연결이 안 된 걸 알면 보내기 전에 알려 준다
   if(cur){const st=await api_().session_state(cur),mine=data&&data.ver&&st.ver&&data.ver[0]===st.ver[0]&&data.ver[1]===st.ver[1];
-    if(!mine&&st.idle!==null&&st.idle<20&&!await ask('다른 곳에서 쓰는 중일 수 있어요','이 대화가 방금까지 터미널 등 다른 곳에서 쓰인 것 같아요.\n같은 대화에 동시에 보내면 기록이 꼬일 수 있습니다.','그래도 보내기'))return}
+    if(!mine&&st.idle!==null&&st.idle<20&&!await ask('다른 곳에서 쓰는 중일 수 있습니다','이 대화가 방금까지 터미널 등 다른 곳에서 쓰인 것 같습니다.\n같은 대화에 동시에 보내면 기록이 꼬일 수 있습니다.','그래도 보내기'))return}
   if(await dispatch(t,files)){$('#msg').value='';attachPaths=new Set();autosize()}
 }
 $('#bSend').onclick=send;
@@ -682,26 +786,29 @@ $('#slash').onmousedown=e=>{e.preventDefault();const it=e.target.closest('.si');
 let webOn=false;
 function setWebBtn(){const b=$('#bWeb');b.classList.toggle('on',webOn);b.textContent=webOn?'🔎 웹 검색 켜짐':'🔎 웹 검색 꺼짐'}
 $('#bWeb').onclick=async()=>{
-  if(webOn){webOn=false;setWebBtn();await api_().set_setting('web',false);return toast('웹 검색을 껐어요')}
+  if(webOn){webOn=false;setWebBtn();await api_().set_setting('web',false);return toast('웹 검색을 껐습니다')}
   if(!await api_().get_setting('webAsked')){
-    if(!await ask('웹 검색을 허용할까요?','켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있어요. 터미널의 Claude Code에서 쓰던 웹 검색과 같습니다.\n\n  · 검색어와 주소는 인터넷으로 나가요\n  · "읽기만" 모드여도 검색은 가능해요 (내 PC 파일은 바뀌지 않아요)\n  · 선택은 기억하고, 언제든 이 버튼으로 끌 수 있어요','켜기'))return;
+    if(!await ask('웹 검색을 허용하시겠습니까?','켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다. 터미널의 Claude Code에서 쓰던 웹 검색과 같습니다.\n\n  · 검색어와 주소는 인터넷으로 나갑니다\n  · "읽기만" 모드여도 검색은 가능합니다 (내 PC 파일은 바뀌지 않습니다)\n  · 선택은 기억하고, 언제든 이 버튼으로 끌 수 있습니다','켜기'))return;
     await api_().set_setting('webAsked',true)}
-  webOn=true;setWebBtn();await api_().set_setting('web',true);toast('다음 메시지부터 웹 검색을 쓸 수 있어요')};
+  webOn=true;setWebBtn();await api_().set_setting('web',true);toast('다음 메시지부터 웹 검색을 쓸 수 있습니다')};
 /* ---- 브라우저(Chrome) 연결: 켜면 Claude가 내 Chrome을 직접 열고 확인·디버깅할 수 있다. 기본 꺼짐, 켠 뒤에는 선택을 기억한다 ---- */
 let chromeOn=false;
 function setChromeBtn(){const b=$('#bChrome');b.classList.toggle('on',chromeOn);b.textContent=chromeOn?'🌐 브라우저 켜짐':'🌐 브라우저 꺼짐'}
 $('#bChrome').onclick=async()=>{
-  if(chromeOn){chromeOn=false;setChromeBtn();await api_().set_setting('chrome',false);return toast('브라우저 연결을 껐어요')}
-  if(!await ask('내 Chrome을 Claude가 조작해도 될까요?','켜면 Claude가 내 Chrome에서 페이지를 열고, 내용을 읽고, 클릭·입력까지 할 수 있어요. 웹 개발 결과를 직접 보고 고치는 데 쓰입니다.\n\n  · 이미 로그인된 사이트에도 접근할 수 있고, 화면 내용은 Anthropic으로 전송돼요\n  · "읽기만" 모드여도 브라우저 조작은 가능해요\n  · Chrome에 Claude 확장 프로그램이 설치·연결돼 있어야 해요\n\n필요할 때만 켜고 끝나면 꺼 주세요. 뷰어를 다시 열면 꺼진 상태로 시작해요.','켜기',true,'skip_chrome'))return;
-  chromeOn=true;setChromeBtn();await api_().set_setting('chrome',true);toast('다음 메시지부터 Claude가 Chrome을 쓸 수 있어요')};
+  if(chromeOn){chromeOn=false;setChromeBtn();await api_().set_setting('chrome',false);return toast('브라우저 연결을 껐습니다')}
+  if(!await ask('내 Chrome을 Claude가 조작해도 되겠습니까?','켜면 Claude가 내 Chrome에서 페이지를 열고, 내용을 읽고, 클릭·입력까지 할 수 있습니다. 웹 개발 결과를 직접 보고 고치는 데 쓰입니다.\n\n  · 이미 로그인된 사이트에도 접근할 수 있고, 화면 내용은 Anthropic으로 전송됩니다\n  · "읽기만" 모드여도 브라우저 조작은 가능합니다\n  · Chrome에 Claude 확장 프로그램이 설치·연결돼 있어야 합니다\n\n필요할 때만 켜고 끝나면 꺼 주십시오. 뷰어를 다시 열면 꺼진 상태로 시작합니다.','켜기',true,'skip_chrome'))return;
+  chromeOn=true;setChromeBtn();await api_().set_setting('chrome',true);toast('다음 메시지부터 Claude가 Chrome을 쓸 수 있습니다')};
 /* ---- 모델 선택 ---- */
 /* ---- 생각 깊이(effort) 선택 / 도움말 ---- */
 let efforts=[],curEffort='';
 function setEffortBtn(){const e=efforts.find(x=>x.id===curEffort);$('#bEffort').textContent='생각 깊이: '+(e?e.label:'기본')+' ▾'}
 $('#bEffort').onclick=ev=>{ev.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
   mm.innerHTML=efforts.map(x=>`<button data-k="e" data-id="${esc(x.id)}" class="${x.id===curEffort?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
-$('#bHelp').onclick=()=>{$('#helpModal').hidden=false};
-$('#helpClose').onclick=()=>{$('#helpModal').hidden=true};
+function helpTab(p){document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#helpModal .hp').forEach(x=>x.classList.toggle('on',x.id==='hp-'+p));$('#helpModal .hbody').scrollTop=0}
+document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.onclick=()=>helpTab(b.dataset.p));
+$('#bHelp').onclick=async()=>{helpTab('cmd');try{$('#updChk').checked=(await api_().get_setting('update_check'))!==false}catch(e){}$('#helpModal').hidden=false};
+$('#updChk').onchange=async e=>{await api_().set_setting('update_check',e.target.checked);toast(e.target.checked?'시작할 때 새 버전을 확인합니다':'새 버전 확인을 껐습니다')};
+$('#helpClose').onclick=()=>{$('#helpModal').hidden=true};$('#helpX').onclick=()=>{$('#helpModal').hidden=true};
 $('#helpModal').addEventListener('mousedown',e=>{if(e.target.id==='helpModal')$('#helpModal').hidden=true});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#helpModal').hidden)$('#helpModal').hidden=true});
 let models=[],curModel='';
@@ -709,9 +816,9 @@ function setModelBtn(){const m=models.find(x=>x.id===curModel);$('#bModel').text
 $('#bModel').onclick=e=>{e.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
   mm.innerHTML=models.map(x=>`<button data-id="${esc(x.id)}" class="${x.id===curModel?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
 $('#mmenu').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.k==='e'){curEffort=b.dataset.id;$('#mmenu').hidden=true;setEffortBtn();await api_().set_setting('effort',curEffort);return toast(curEffort?'다음 메시지부터 생각 깊이를 "'+b.querySelector('b').textContent+'"로 해요':'다음 메시지부터 기본 생각 깊이를 써요')}
+  if(b.dataset.k==='e'){curEffort=b.dataset.id;$('#mmenu').hidden=true;setEffortBtn();await api_().set_setting('effort',curEffort);return toast(curEffort?'다음 메시지부터 생각 깊이를 "'+b.querySelector('b').textContent+'"로 합니다':'다음 메시지부터 기본 생각 깊이를 씁니다')}
   curModel=b.dataset.id;$('#mmenu').hidden=true;setModelBtn();
-  await api_().set_setting('model',curModel);toast(curModel?'다음 메시지부터 '+b.querySelector('b').textContent+' 모델을 써요':'다음 메시지부터 Claude Code 기본 모델을 써요')};
+  await api_().set_setting('model',curModel);toast(curModel?'다음 메시지부터 '+b.querySelector('b').textContent+' 모델을 씁니다':'다음 메시지부터 Claude Code 기본 모델을 씁니다')};
 document.addEventListener('mousedown',e=>{if(!e.target.closest('#mmenu,#bModel,#bEffort'))$('#mmenu').hidden=true});
 /* ---- 선택 버튼 누르면 그 내용을 답으로 보낸다 ---- */
 $('#chat').addEventListener('click',async e=>{
@@ -723,14 +830,14 @@ $('#chat').addEventListener('click',async e=>{
 /* ---- 로그인 풀림 / 연결 끊김 알림 ---- */
 let alertKind=null,lastHealthAt=0;
 const PROBLEMS={
-  auth:{t:'로그인이 풀렸어요',y:'터미널 열기',b:'Claude Code 로그인이 풀렸거나 만료됐어요.\n\n다시 로그인하는 방법\n  1. 아래 "터미널 열기"를 누르면 Claude Code 창이 열려요\n     (직접 열려면 Win+R → cmd → claude 입력)\n  2. 그 창에서  /login  을 입력하고 Enter\n  3. 브라우저에서 로그인을 마친 뒤 이 뷰어로 돌아와 다시 보내세요\n\n보내려던 말은 입력창에 돌려놨어요.'},
-  net:{t:'인터넷에 연결되지 않았어요',y:'다시 확인',b:'Anthropic 서버에 닿지 못했어요.\n\n  · Wi-Fi나 랜선, 인터넷 연결을 확인하세요\n  · VPN이나 회사·학교 네트워크에서 막고 있는지 확인하세요\n  · 연결이 돌아오면 다시 보내면 돼요\n\n보내려던 말은 입력창에 돌려놨어요.'},
-  limit:{t:'사용량 한도에 걸렸어요',y:'확인',b:'지금은 Claude 사용 한도에 도달한 것 같아요. 한도가 풀릴 때까지 기다렸다가 다시 보내 주세요.\n(터미널의 Claude Code에서 /usage 를 입력하면 남은 양과 풀리는 시각을 볼 수 있어요)'},
-  busy:{t:'Claude 서버가 혼잡해요',y:'확인',b:'서버가 바쁘거나 일시적으로 오류가 났어요. 잠시 뒤에 다시 보내 보세요.'}};
+  auth:{t:'로그인이 풀렸습니다',y:'터미널 열기',b:'Claude Code 로그인이 풀렸거나 만료됐습니다.\n\n다시 로그인하는 방법\n  1. 아래 "터미널 열기"를 누르면 Claude Code 창이 열립니다\n     (직접 열려면 Win+R → cmd → claude 입력)\n  2. 그 창에서  /login  을 입력하고 Enter\n  3. 브라우저에서 로그인을 마친 뒤 이 뷰어로 돌아와 다시 보내십시오\n\n보내려던 말은 입력창에 돌려놨습니다.'},
+  net:{t:'인터넷에 연결되지 않았습니다',y:'다시 확인',b:'Anthropic 서버에 닿지 못했습니다.\n\n  · Wi-Fi나 랜선, 인터넷 연결을 확인하십시오\n  · VPN이나 회사·학교 네트워크에서 막고 있는지 확인하십시오\n  · 연결이 돌아오면 다시 보내면 됩니다\n\n보내려던 말은 입력창에 돌려놨습니다.'},
+  limit:{t:'사용량 한도에 걸렸습니다',y:'확인',b:'지금은 Claude 사용 한도에 도달한 것 같습니다. 한도가 풀릴 때까지 기다렸다가 다시 보내 주십시오.\n(터미널의 Claude Code에서 /usage 를 입력하면 남은 양과 풀리는 시각을 볼 수 있습니다)'},
+  busy:{t:'Claude 서버가 혼잡합니다',y:'확인',b:'서버가 바쁘거나 일시적으로 오류가 났습니다. 잠시 뒤에 다시 보내 보십시오.'}};
 async function problem(kind,detail){
   const P=PROBLEMS[kind];if(!P)return false;
   const ok=await ask(P.t,P.b+(detail?'\n\n(자세한 내용: '+String(detail).replace(/\s+/g,' ').slice(0,200)+')':''),P.y);
-  if(ok&&kind==='auth'){if(!await api_().open_login())toast('Claude Code를 열지 못했어요. 직접 Win+R → cmd → claude 를 실행해 주세요')}
+  if(ok&&kind==='auth'){if(!await api_().open_login())toast('Claude Code를 열지 못했습니다. 직접 Win+R → cmd → claude 를 실행해 주십시오')}
   if(ok&&kind==='net')await checkHealth(true);
   return ok}
 async function checkHealth(force){
@@ -739,15 +846,15 @@ async function checkHealth(force){
     const h=await api_().health();lastHealthAt=Date.now();
     alertKind=!h.net?'net':(h.login===false?'auth':null);
     $('#alertbar').hidden=!alertKind;
-    if(alertKind)$('#alertTxt').textContent=alertKind==='net'?'⚠ 인터넷에 연결되지 않았어요.':'⚠ Claude 로그인이 풀렸어요. 터미널에서 /login 을 입력해 다시 로그인하세요.';
+    if(alertKind)$('#alertTxt').textContent=alertKind==='net'?'⚠ 인터넷에 연결되지 않았습니다.':'⚠ Claude 로그인이 풀렸습니다. 터미널에서 /login 을 입력해 다시 로그인하십시오.';
   }catch(e){}}
 $('#alertFix').onclick=()=>{if(alertKind)problem(alertKind)};
-$('#alertRe').onclick=async()=>{await checkHealth(true);toast(alertKind?'아직 문제가 있어요':'정상이에요')};
+$('#alertRe').onclick=async()=>{await checkHealth(true);toast(alertKind?'아직 문제가 있습니다':'정상입니다')};
 setInterval(()=>{if(!document.hidden&&!running)checkHealth()},120000);
 window.addEventListener('focus',()=>{if(Date.now()-lastHealthAt>20000)checkHealth()});
 $('#cmode').onclick=async e=>{const b=e.target.closest('button');if(!b||b.dataset.m===curMode)return;const m=b.dataset.m;
-  if(m==='edit'&&!await ask('파일 수정을 허용할까요?','Claude가 이 대화의 폴더 안에서 파일을 만들거나 고칠 수 있게 됩니다.\n명령 실행은 계속 거절돼요.','허용',false,'skip_edit'))return;
-  if(m==='all'&&!await ask('모든 도구를 허용할까요?','Claude가 확인 없이 파일을 바꾸고 명령을 실행할 수 있습니다.\n내 PC에 영향을 줄 수 있으니 믿을 수 있는 폴더에서만 쓰세요.','모두 허용',true,'skip_all'))return;
+  if(m==='edit'&&!await ask('파일 수정을 허용하시겠습니까?','Claude가 이 대화의 폴더 안에서 파일을 만들거나 고칠 수 있게 됩니다.\n명령 실행은 계속 거절됩니다.','허용',false,'skip_edit'))return;
+  if(m==='all'&&!await ask('모든 도구를 허용하시겠습니까?','Claude가 확인 없이 파일을 바꾸고 명령을 실행할 수 있습니다.\n내 PC에 영향을 줄 수 있으니 믿을 수 있는 폴더에서만 쓰십시오.','모두 허용',true,'skip_all'))return;
   curMode=m;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x===b));setHint();await api_().set_setting('mode',m)};
 function resetToNew(){
   cur=null;curInfo=null;pending=null;queue=[];newCwd=null;workDir=null;
@@ -755,7 +862,7 @@ function resetToNew(){
   $('#title').firstChild.textContent='새 대화';$('#sub').textContent='';renderUsage();
   sel={files:-1,cmds:-1,others:-1};renderSessions();renderChat(false);['files','cmds','others'].forEach(renderSplit);counts();setHint()}
 $('#bNew').onclick=async()=>{
-  if(running||queue.length)return toast('응답 중이거나 예약된 메시지가 있으면 새 대화를 시작할 수 없어요');
+  if(running||queue.length)return toast('응답 중이거나 예약된 메시지가 있으면 새 대화를 시작할 수 없습니다');
   await api_().new_chat();resetToNew();
   document.querySelector('.tab[data-t="chat"]').click();$('#msg').focus()};
 /* 이름 바꾸기: 입력칸이 있는 확인창. 확인하면 새 이름(문자열), 취소하면 null */
@@ -768,19 +875,19 @@ function askText(title,body,value){return new Promise(res=>{
   y.onclick=()=>done(inp.value);n.onclick=()=>done(null)})}
 async function renameSession(i){
   const s=sessions[i];if(!s)return;
-  const v=await askText('대화 이름 바꾸기','뷰어에서만 바뀌어요. 비워서 저장하면 원래 이름으로 돌아갑니다.',s.title);
+  const v=await askText('대화 이름 바꾸기','뷰어에서만 바뀝니다. 비워서 저장하면 원래 이름으로 돌아갑니다.',s.title);
   if(v===null||v.trim()===s.title)return;
   const r=await api_().rename_session(s.path,v);if(!r.ok)return toast(r.error);
   if(cur===s.path)$('#title').firstChild.textContent=r.title;
   await loadSessions();if(cur===s.path)curInfo=sessions.find(x=>x.path===cur)||curInfo;
-  toast('이름을 바꿨어요')}
+  toast('이름을 바꿨습니다')}
 async function delSession(i){
   const s=sessions[i];if(!s)return;
-  if(running&&s.path===cur)return toast('응답 중인 대화는 삭제할 수 없어요');
-  if(!await ask('이 대화를 삭제할까요?',`"${s.title}"\n\n휴지통으로 옮겨요. 휴지통에서 복원할 수 있습니다.`,'삭제',true))return;
+  if(running&&s.path===cur)return toast('응답 중인 대화는 삭제할 수 없습니다');
+  if(!await ask('이 대화를 삭제하시겠습니까?',`"${s.title}"\n\n휴지통으로 옮깁니다. 휴지통에서 복원할 수 있습니다.`,'삭제',true))return;
   const r=await api_().delete_session(s.path);if(!r.ok)return toast(r.error);
   if(cur===s.path){await api_().new_chat();resetToNew()}
-  await loadSessions();toast('휴지통으로 옮겼어요')}
+  await loadSessions();toast('휴지통으로 옮겼습니다')}
 
 /* ---- 우클릭 메뉴: 웹뷰 기본 메뉴는 꺼져 있어서 직접 만든다 ---- */
 const isEdit=el=>el&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&/^(text|search|)$/.test(el.type)));
@@ -792,7 +899,7 @@ async function copyText(t){
 function selText(el){return isEdit(el)?el.value.slice(el.selectionStart,el.selectionEnd):String(getSelection())}
 function fire(el){el.dispatchEvent(new Event('input',{bubbles:true}))}
 async function pasteInto(el){
-  const t=await api_().get_clipboard();if(!t)return toast('붙여넣을 글이 없어요');
+  const t=await api_().get_clipboard();if(!t)return toast('붙여넣을 글이 없습니다');
   const a=el.selectionStart,b=el.selectionEnd;el.focus();el.setRangeText(t,a,b,'end');fire(el)}
 function ctxMenu(x,y,items){
   const m=$('#ctx');m.innerHTML=items.map((it,i)=>`<button data-i="${i}"${it.off?' disabled':''}>${it.label}<kbd>${it.key||''}</kbd></button>`).join('');
@@ -808,12 +915,12 @@ document.addEventListener('contextmenu',e=>{
     ed.focus();
     return ctxMenu(e.clientX,e.clientY,[
       {label:'잘라내기',key:'Ctrl+X',off:!has||ro,run:async()=>{if(await copyText(selText(ed))){ed.setRangeText('',ed.selectionStart,ed.selectionEnd,'end');fire(ed)}}},
-      {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(ed)))toast('복사했어요')}},
+      {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(ed)))toast('복사했습니다')}},
       {label:'붙여넣기',key:'Ctrl+V',off:ro,run:()=>pasteInto(ed)},
       {label:'전체 선택',key:'Ctrl+A',run:()=>{ed.focus();ed.select()}}])}
   const has=!!String(getSelection());
   ctxMenu(e.clientX,e.clientY,[
-    {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(null)))toast('복사했어요')}},
+    {label:'복사',key:'Ctrl+C',off:!has,run:async()=>{if(await copyText(selText(null)))toast('복사했습니다')}},
     {label:'전체 선택',key:'Ctrl+A',run:()=>{const r=document.createRange(),g=getSelection(),n=t.closest&&t.closest('.bubble,pre,.code')||$('#chat');r.selectNodeContents(n);g.removeAllRanges();g.addRange(r)}}])});
 addEventListener('mousedown',e=>{if(!e.target.closest('#ctx'))hideCtx()},true);
 addEventListener('keydown',e=>{if(e.key==='Escape')hideCtx()});
@@ -823,7 +930,7 @@ $('#chat').addEventListener('click',async e=>{
   const b=e.target.closest('button[data-cp]');if(!b||!data)return;
   const m=data.msgs[+b.dataset.cp];if(!m)return;
   const t=m.parts.filter(p=>p.k==='text').map(p=>splitChoices(p.t).text).join('\n\n').trim();
-  toast(await copyText(t)?'메시지를 복사했어요':'복사하지 못했어요')});
+  toast(await copyText(t)?'메시지를 복사했습니다':'복사하지 못했습니다')});
 
 /* ---- 사이드바 크기 조절: 끌어서 줄이거나 늘리고, 0까지 접을 수 있다 ---- */
 const SB_MIN=220,SB_MAX=560,SB_SNAP=110;let sbW=316,sbLast=316;
@@ -841,12 +948,21 @@ $('#rz').addEventListener('pointerdown',e=>{
 const toggleSb=()=>setSb(sbW===0?sbLast:0,true);
 $('#rz').addEventListener('dblclick',toggleSb);$('#sbClose').onclick=toggleSb;$('#sbOpen').onclick=toggleSb;
 
+/* ---- 새 버전 알림: 시작할 때 한 번, 웹사이트의 version.json 만 읽는다 ---- */
+let updLatest=null;
+async function checkUpdate(){try{const r=await api_().check_update();if(!r||r.skipped)return;updLatest=r.latest;
+  $('#updTxt').textContent='새 버전이 나왔습니다 (v'+r.latest+'). 지금은 v'+r.cur+'을 쓰고 있습니다.';$('#updbar').hidden=false}catch(e){}}
+$('#updGo').onclick=()=>api_().open_site();
+$('#updClose').onclick=async()=>{$('#updbar').hidden=true;if(updLatest)await api_().set_setting('update_skip',updLatest)};
+const bootDone=()=>{$('#boot').hidden=true};
+setTimeout(bootDone,25000);                                  // 어떤 이유로든 안내 화면이 계속 남지 않게 한다
 window.addEventListener('pywebviewready',async()=>{
   try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
   try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();chromeOn=(await api_().get_setting('chrome'))===true;setChromeBtn();{const sm2=await api_().get_setting('mode');if(['read','edit','all'].includes(sm2)){curMode=sm2;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x.dataset.m===sm2));setHint()}}efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
   const init=await api_().get_initial();
   await loadSessions();
+  bootDone();checkUpdate();
   if(init)openSession(init);
 });
 </script>

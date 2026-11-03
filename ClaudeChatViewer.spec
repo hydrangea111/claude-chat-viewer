@@ -16,11 +16,16 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+# exe 가 압축을 푸는 동안(수 초~수십 초) 먼저 보이는 '여는 중' 안내 창
+splash = Splash('splash.png', binaries=a.binaries, datas=a.datas, text_pos=None, always_on_top=True)
+
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
     a.datas,
+    splash,
+    splash.binaries,
     [],
     name='ClaudeChatViewer',
     icon='app.ico',

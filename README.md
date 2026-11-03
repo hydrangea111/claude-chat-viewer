@@ -17,15 +17,15 @@ Claude Code로 나눈 대화(`~/.claude/projects/**/*.jsonl`)를 읽기 좋게 �
 - 로그인이 풀리거나 인터넷이 끊기면 알림(로그인은 터미널에서 /login)
 - 밝은 화면 · 어두운 화면
 
-변경 내역은 [CHANGELOG.md](CHANGELOG.md)를 보세요.
+변경 내역은 [CHANGELOG.md](CHANGELOG.md)를 보십시오.
 
 ## 개인정보
 대화를 읽고 저장하는 기능은 내 PC 안에서만 동작하며 어디로도 전송하지 않습니다.
-입력창을 쓰면 PC에 설치된 Claude Code(`claude -p`)를 실행해 말을 전달하므로, 그 내용은 Claude Code가 평소처럼 Anthropic으로 전송합니다. 뷰어는 연결·로그인 상태를 점검하려고 api.anthropic.com 에 접속만 해 보며(대화 내용은 보내지 않음) `claude auth status`를 읽기 전용으로 실행합니다. 웹 검색 스위치와 브라우저 연결 스위치는 기본이 꺼져 있고(브라우저는 켤 때마다 확인), 켜면 검색어나 화면 내용이 인터넷으로 나갈 수 있습니다.
+입력창을 쓰면 PC에 설치된 Claude Code(`claude -p`)를 실행해 말을 전달하므로, 그 내용은 Claude Code가 평소처럼 Anthropic으로 전송합니다. 뷰어는 연결·로그인 상태를 점검하려고 api.anthropic.com 에 접속만 해 보며(대화 내용은 보내지 않음) `claude auth status`를 읽기 전용으로 실행합니다. 웹 검색 스위치와 브라우저 연결 스위치는 기본이 꺼져 있고(브라우저는 켤 때마다 확인), 켜면 검색어나 화면 내용이 인터넷으로 나갈 수 있습니다. 시작할 때 새 버전이 있는지 보려고 다운로드 사이트의 작은 파일(`version.json`) 하나를 내려받으며, 보내는 정보는 없고 도움말에서 끌 수 있습니다.
 
 ## 실행
 - **exe:** Releases에서 받아 더블클릭. Windows "PC 보호" 경고가 뜨면 *추가 정보 → 실행*. (서명 없는 개인 프로그램)
-- **소스(exe가 Windows에 막힐 때):** 소스를 받아 `run.bat`을 더블클릭하세요. 파이썬이 있는지, pywebview가 설치돼 있는지 확인하고 필요하면 설치를 안내합니다. 파이썬 설치부터 따라 하려면 [안내 페이지](https://dh-chat-viewer.web.app/python-install.html)를 보세요. 직접 하려면 `pip install pywebview` 후 `python chat_export.py`.
+- **소스(exe가 Windows에 막힐 때):** 소스를 받아 `run.bat`을 더블클릭하십시오. 파이썬이 있는지, pywebview가 설치돼 있는지 확인하고 필요하면 설치를 안내합니다. 파이썬 설치부터 따라 하려면 [안내 페이지](https://dh-chat-viewer.web.app/python-install.html)를 보십시오. 직접 하려면 `pip install pywebview` 후 `python chat_export.py`.
 - 환경: Windows 10/11 64비트, Microsoft Edge WebView2 (Windows 11 기본 포함)
 - 입력창을 쓰려면 Claude Code가 설치되고 로그인돼 있어야 합니다.
 
@@ -34,3 +34,7 @@ Claude Code로 나눈 대화(`~/.claude/projects/**/*.jsonl`)를 읽기 좋게 �
 pip install pywebview pyinstaller pillow
 python -m PyInstaller ClaudeChatViewer.spec
 ```
+
+## 라이선스
+
+MIT 라이선스입니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 보십시오. 개인이 만든 비공식 도구이며 Anthropic과 관련이 없습니다.
