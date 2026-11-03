@@ -14,6 +14,15 @@ import uuid
 import webbrowser
 from pathlib import Path
 
+SRC_SPLASH_FLAG = Path(tempfile.gettempdir()) / ("ccv_splash_%d.flag" % os.getpid())
+if sys.platform == "win32" and not getattr(sys, "frozen", False) and (Path(__file__).parent / "src_splash.py").exists():
+    # 소스로 실행할 때: 무거운 불러오기(webview 등)보다 먼저 '여는 중입니다' 안내 창을 따로 띄운다
+    try:
+        subprocess.Popen([sys.executable, str(Path(__file__).parent / "src_splash.py"), str(SRC_SPLASH_FLAG), str(os.getpid())],
+                         creationflags=0x08000000, close_fds=True)  # CREATE_NO_WINDOW
+    except Exception:
+        pass
+
 import webview
 
 import core
@@ -36,6 +45,11 @@ def close_splash():
     try:
         import pyi_splash
         pyi_splash.close()
+    except Exception:
+        pass
+    try:  # 소스 실행용 안내 창에 닫으라는 신호를 보낸다
+        if SRC_SPLASH_FLAG.parent.exists():
+            SRC_SPLASH_FLAG.write_text("x")
     except Exception:
         pass
 ICON = BASE / "app.ico"
