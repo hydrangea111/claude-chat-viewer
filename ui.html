@@ -346,9 +346,9 @@ section.on{display:flex}
       </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
       <div id="slash" hidden></div>
       <div class="crow">
-        <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈)"></textarea>
+        <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈 · 응답 중 Esc 중지)"></textarea>
         <button class="btn primary" id="bSend">보내기</button>
-        <button class="btn" id="bStop" hidden>중지</button>
+        <button class="btn" id="bStop" hidden title="응답 중지 (Esc)">중지</button>
       </div>
     </div>
     <div class="chint" id="chint"></div>
@@ -425,8 +425,10 @@ section.on{display:flex}
     <h4>새 버전 알림</h4>
     <p>시작할 때 웹사이트의 작은 파일(version.json) 하나를 내려받아 새 버전이 있는지만 확인합니다. 내 정보는 보내지 않습니다. 새 버전이 있으면 위에 안내 줄이 뜹니다.</p>
     <label class="chk"><input type="checkbox" id="updChk"> 시작할 때 새 버전이 있는지 확인하기</label>
+    <h4>응답 중지</h4>
+    <p>Claude가 답하는 동안 <b>Esc</b>를 누르면 <b>중지</b> 버튼과 같이 응답을 멈춥니다. 창이나 메뉴가 열려 있으면 Esc는 먼저 그것을 닫습니다.</p>
     <h4>토큰·한도 줄</h4>
-    <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다.</p>
+    <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다. 한도 줄에 마우스를 올리면 초기화 시각이 나오고, 그 시각이 지나면 자동으로 0%로 바뀝니다.</p>
   </section>
   <section class="hp" id="hp-lic">
     <h4>이 프로그램</h4>
@@ -541,20 +543,28 @@ function renderUsage(){
     tips.push('입력 '+L(u.in+u.cache_new)+', 출력 '+L(u.out)+'.\n캐시 읽기 '+L(u.cache_read)+', 응답 '+L(u.turns)+'회.');
   }
   const w=limits&&limits.windows;
+  let nextReset=Infinity;
   if(w){
     const now=Date.now();
-    const f=(k,nm)=>{const x=w[k];if(!x||typeof x.u!=='number')return null;const n=Math.round(x.u*100),p=n+'%';
-      let r=Number(x.r);if(r&&r<1e12)r*=1000;                       // 초 단위로 오면 ms로
-      if(r&&r<now)return nm+' 초기화됨('+p+')';                     // 초기화 시각이 지났으면 옛 값이라고 표시
-      return n>=80?`<span class="hot">${nm} ${p}</span>`:nm+' '+p};  // 80% 이상이면 눈에 띄게
-    const a=f('five_hour','5시간'),b=f('seven_day','7일');
-    if(a||b){
+    const rms=x=>{let r=Number(x&&x.r);if(r&&r<1e12)r*=1000;return r||0};          // 초 단위로 오면 ms로
+    const fmt=r=>{const d=new Date(r),z=n=>String(n).padStart(2,'0'),t=z(d.getHours())+':'+z(d.getMinutes());
+      const day=new Date(now),same=d.toDateString()===day.toDateString();
+      day.setDate(day.getDate()+1);return (same?'오늘 ':d.toDateString()===day.toDateString()?'내일 ':(d.getMonth()+1)+'월 '+d.getDate()+'일 ')+t};
+    const left=r=>{const m=Math.max(1,Math.round((r-now)/60000));return m<60?m+'분 뒤':m<1440?Math.floor(m/60)+'시간 '+(m%60?m%60+'분 ':'')+'뒤':Math.floor(m/1440)+'일 '+Math.floor(m%1440/60)+'시간 뒤'};
+    const win=(k,nm)=>{const x=w[k];if(!x||typeof x.u!=='number')return null;
+      const r=rms(x),reset=r&&r<=now,v=reset?0:x.u*100;
+      if(r>now)nextReset=Math.min(nextReset,r);
+      return {nm,n:Math.round(v),exact:v.toFixed(1)+'%',reset,r}};
+    const ws=[win('five_hour','5시간'),win('seven_day','7일')].filter(Boolean);
+    if(ws.length){
+      const txt=ws.map(x=>x.n>=80?`<span class="hot">${x.nm} ${x.n}%</span>`:x.nm+' '+x.n+'%');
       const m=limits.at?Math.max(0,Math.round((now/1000-limits.at)/60)):null;
       const ago=m===null?'':m<1?'방금':m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전';
-      parts.push('<b>한도</b>  '+[a,b].filter(Boolean).join(' · ')+(ago?'  · '+ago+' 기준':''));
-      const pc=k=>{const x=w[k];return x&&typeof x.u==='number'?(x.u*100).toFixed(1)+'%':'알 수 없음'};
-      tips.push('5시간 한도 '+pc('five_hour')+', 7일 한도 '+pc('seven_day')+'.\n마지막 응답 기준입니다.')}
+      parts.push('<b>한도</b>  '+txt.join(' · ')+(ago?'  · '+ago+' 기준':''));
+      tips.push(ws.map(x=>x.nm+' 한도 '+x.exact+(x.reset?' (초기화됨)':x.r?' · 초기화 '+fmt(x.r)+' ('+left(x.r)+')':'')).join('\n')+'\n마지막 응답 기준입니다.')}
   }
+  clearTimeout(renderUsage.t);
+  if(nextReset<Infinity)renderUsage.t=setTimeout(renderUsage,Math.min(nextReset-Date.now()+1000,2e9));   // 초기화 시각이 되면 자동으로 0%로
   $('#usage').innerHTML=parts.map((x,i)=>'<div title="'+esc(tips[i]||'')+'">'+x+'</div>').join('');
 }
 async function loadLimits(){try{limits=await api_().get_limits()}catch(e){}renderUsage()}
@@ -760,6 +770,10 @@ async function send(){
 }
 $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
+document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
+  if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;
+  if(!$('#modal').hidden||!$('#helpModal').hidden||!$('#slash').hidden||!$('#mmenu').hidden)return;
+  e.preventDefault();userStopped=true;api_().stop();toast('응답을 중지했습니다')});
 $('#chat').addEventListener('click',e=>{const b=e.target.closest('button[data-q]');if(!b)return;   // 예약 취소: 입력창으로 되돌림
   const [it]=queue.splice(+b.dataset.q,1);if(!it)return;const t=$('#msg');t.value=t.value?it.text+'\n\n'+t.value:it.text;autosize();renderChat(true);t.focus()});
 $('#msg').oninput=()=>{autosize();slashUpdate()};
