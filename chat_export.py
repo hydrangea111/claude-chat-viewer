@@ -287,17 +287,45 @@ def set_window_icon():
         return
     import ctypes
     u = ctypes.windll.user32
-    hwnd = 0
-    for _ in range(50):  # 창이 뜰 때까지 잠깐 기다린다
-        hwnd = u.FindWindowW(None, TITLE)
+    from ctypes import wintypes
+    me = os.getpid()
+    CB = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+    def find():  # 같은 제목의 다른 창이 아니라 이 프로그램 자신의 창만 찾는다
+        found = []
+
+        def cb(hw, lp):
+            pid = wintypes.DWORD()
+            u.GetWindowThreadProcessId(hw, ctypes.byref(pid))
+            if pid.value == me and u.IsWindowVisible(hw):
+                n = u.GetWindowTextLengthW(hw)
+                if n:
+                    buf = ctypes.create_unicode_buffer(n + 1)
+                    u.GetWindowTextW(hw, buf, n + 1)
+                    if buf.value == TITLE:
+                        found.append(hw)
+            return True
+        u.EnumWindows(CB(cb), 0)
+        return found[0] if found else 0
+
+    def apply(hwnd):
+        for metric, kind in ((49, 0), (11, 1)):  # SM_CXSMICON/ICON_SMALL, SM_CXICON/ICON_BIG
+            size = u.GetSystemMetrics(metric) or 32
+            h = u.LoadImageW(None, str(ICON), 1, size, size, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
+            if h:
+                u.SendMessageW(hwnd, 0x80, kind, h)  # WM_SETICON
+    t0 = time.time()
+    while time.time() - t0 < 120:  # 시작이 느린 PC에서는 창이 한참 뒤에 뜨므로 넉넉히 기다린다
+        hwnd = find()
         if hwnd:
             break
-        time.sleep(0.1)
-    if not hwnd:
+        time.sleep(0.2)
+    else:
         return
-    for size, kind in ((16, 0), (32, 1)):  # ICON_SMALL, ICON_BIG
-        h = u.LoadImageW(None, str(ICON), 1, size, size, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
-        u.SendMessageW(hwnd, 0x80, kind, h)  # WM_SETICON
+    for wait in (0, 1.5, 4, 10):  # 웹뷰가 아이콘을 다시 덮어쓰는 경우를 대비해 몇 번 더 적용한다
+        time.sleep(wait)
+        hwnd = find() or hwnd
+        apply(hwnd)
 
 
 def clipboard_get():

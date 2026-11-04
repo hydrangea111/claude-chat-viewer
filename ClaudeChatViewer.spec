@@ -17,7 +17,21 @@ a = Analysis(
 pyz = PYZ(a.pure)
 
 # exe 가 압축을 푸는 동안(수 초~수십 초) 먼저 보이는 '여는 중' 안내 창
-splash = Splash('splash.png', binaries=a.binaries, datas=a.datas, text_pos=None, always_on_top=True)
+# 안내 창을 끌어서 옮길 수 있게 하고(제목줄이 없어서 직접 처리), 다른 창이 위로 올라올 수 있게 항상 위는 끈다
+class DragSplash(Splash):
+    def generate_script(self):
+        script = super().generate_script()
+        script += """
+bind .root.canvas <ButtonPress-1> {set ::dragx [expr {%X-[winfo rootx .]}]; set ::dragy [expr {%Y-[winfo rooty .]}]}
+bind .root.canvas <B1-Motion> {wm geometry . +[expr {%X-$::dragx}]+[expr {%Y-$::dragy}]}
+.root.canvas configure -cursor fleur
+"""
+        with open(self.script_name, "w", encoding="utf-8") as fh:
+            fh.write(script)
+        return script
+
+
+splash = DragSplash('splash.png', binaries=a.binaries, datas=a.datas, text_pos=None, always_on_top=False)
 
 exe = EXE(
     pyz,

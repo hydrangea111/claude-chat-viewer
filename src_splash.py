@@ -24,12 +24,16 @@ def main():
     img = Path(__file__).parent / "splash.png"
     root = tk.Tk()
     root.overrideredirect(True)
-    root.attributes("-topmost", True)
     pic = tk.PhotoImage(file=str(img))
     tk.Label(root, image=pic, borderwidth=0).pack()
     root.update_idletasks()
     w, h = pic.width(), pic.height()
     root.geometry("%dx%d+%d+%d" % (w, h, (root.winfo_screenwidth() - w) // 2, (root.winfo_screenheight() - h) // 2))
+    drag = {}
+    lab = root.winfo_children()[0]
+    lab.configure(cursor="fleur")   # 제목줄이 없는 안내 창이라 끌어서 옮길 수 있게 한다
+    lab.bind("<ButtonPress-1>", lambda e: drag.update(x=e.x_root - root.winfo_x(), y=e.y_root - root.winfo_y()))
+    lab.bind("<B1-Motion>", lambda e: root.geometry("+%d+%d" % (e.x_root - drag["x"], e.y_root - drag["y"])))
     t0 = time.time()
 
     def poll():
