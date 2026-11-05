@@ -105,9 +105,9 @@ section.on{display:flex}
 .msg.user .body{display:flex;flex-direction:column;align-items:flex-end}
 .bubble{padding:11px 16px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
 .msg.claude .bubble{background:var(--panel);border:1px solid var(--line);border-top-left-radius:5px;box-shadow:var(--shadow)}
-.bubble.fold{max-height:13.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
-.bubble.fold.open{max-height:none;-webkit-mask-image:none}
-.foldbtn{align-self:flex-end;margin:4px 4px 0;border:0;background:none;color:var(--dim);font:inherit;font-size:12px;cursor:pointer;padding:2px 6px;border-radius:6px}.foldbtn:hover{background:var(--chip);color:var(--accent)}
+.bubble.fold .fbody{max-height:13.5em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent)}
+.bubble.fold.open .fbody{max-height:none;-webkit-mask-image:none}
+.foldbtn{display:block;margin:6px 0 0 auto;border:0;background:rgba(255,255,255,.2);color:inherit;font:inherit;font-size:12px;cursor:pointer;padding:2px 10px;border-radius:12px}.foldbtn:hover{background:rgba(255,255,255,.35)}
 .msg.user .bubble{background:var(--user);color:#fff;border-top-right-radius:5px}
 .bubble+.bubble,.bubble+.chip,.chip+.bubble,.chip+.chip{margin-top:8px}
 .ts{font-size:11px;color:var(--dim);margin-top:5px}
@@ -682,7 +682,7 @@ function renderChat(live){
     const pushChip=h=>{if(talkOn)work.push(h);else inner+=h};
     const flush=()=>{if(work.length){inner+=`<details class="work"><summary>작업 ${work.length}개 보기</summary>${work.join('')}</details>`;work=[]}};
     for(const p of m.parts){
-      if(p.k==='text'){flush();const sc=user?{text:p.t,ch:null}:splitChoices(p.t);if(sc.text){const long=user&&(sc.text.length>500||sc.text.split('\n').length>10);inner+=`<div class="bubble${long?' fold':''}">${md(sc.text)}</div>`+(long?'<button class="foldbtn">펼치기</button>':'')}if(sc.ch)msgQs.push({q:sc.ch.q,opts:sc.ch.opts.map(l=>({label:l,desc:''}))})}
+      if(p.k==='text'){flush();const sc=user?{text:p.t,ch:null}:splitChoices(p.t);if(sc.text){const long=user&&(sc.text.length>500||sc.text.split('\n').length>10);inner+=long?`<div class="bubble fold"><div class="fbody">${md(sc.text)}</div><button class="foldbtn">펼치기</button></div>`:`<div class="bubble">${md(sc.text)}</div>`}if(sc.ch)msgQs.push({q:sc.ch.q,opts:sc.ch.opts.map(l=>({label:l,desc:''}))})}
       else if(p.k==='ask'){p.qs.forEach(q=>msgQs.push({q:q.q,opts:q.opts}))}
       else if(p.k==='sys')pushChip(`<div class="chip think"><div class="h"><span class="nm">시스템 안내</span><span class="sm">${esc(p.t.slice(0,80))}</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`);
       else if(p.k==='compact')pushChip(`<div class="chip think"><div class="h"><span class="nm">대화 압축</span><span class="sm">이전 내용을 요약해 이어 갑니다</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`);
@@ -703,7 +703,7 @@ function renderChat(live){
 }
 $('#chat').onclick=async e=>{
   const fb=e.target.closest('.foldbtn');
-  if(fb){const b=fb.previousElementSibling;b.classList.toggle('open');fb.textContent=b.classList.contains('open')?'접기':'펼치기';return}
+  if(fb){const b=fb.closest('.bubble');b.classList.toggle('open');fb.textContent=b.classList.contains('open')?'접기':'펼치기';return}
   const h=e.target.closest('.chip>.h');if(!h)return;
   const chip=h.parentElement,go=h.querySelector('.go');
   let pre=chip.querySelector('pre');
@@ -834,7 +834,9 @@ async function tick(){
     // 대기열: 정상 종료거나 내가 중지한 경우에는 다음 예약 메시지를 바로 보내고, 오류면 입력창으로 되돌려 잃어버리지 않게 한다
     if(queue.length){
       if(p.error)restoreQueue('오류가 나서 예약한 메시지를 입력창으로 돌려놨습니다');
-      else{const it=queue.shift();if(!await dispatch(it.text,it.files)){queue.unshift(it);restoreQueue('예약한 메시지를 보내지 못해 입력창으로 돌려놨습니다')}}
+      else{const items=queue.splice(0);   // 기다리는 동안 여러 개를 쳤으면 한 번에 묶어서 보낸다
+      const txt=items.map(i=>i.text).join(String.fromCharCode(10,10)),fl=[].concat(...items.map(i=>i.files||[]));
+      if(!await dispatch(txt,fl)){queue.unshift(...items);restoreQueue('예약한 메시지를 보내지 못해 입력창으로 돌려놨습니다')}}
     }
     userStopped=false;
   }finally{ticking=false}
