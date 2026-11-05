@@ -1008,8 +1008,9 @@ function closePops(except){['#omenu','#xmenu'].forEach(q=>{if(q!==except)$(q).hi
 function updOpts(){const n=document.querySelectorAll('#omenu button.on').length,b=$('#bOpts');b.classList.toggle('has',n>0);b.textContent=n?'옵션 · '+n+'개 켜짐 ▾':'옵션 ▾'}
 new MutationObserver(updOpts).observe($('#omenu'),{subtree:true,attributes:true,childList:true,characterData:true});updOpts();
 $('#bOpts').onclick=e=>{e.stopPropagation();const m=$('#omenu');closePops('#omenu');$('#mmenu').hidden=true;m.style.left=$('#bOpts').offsetLeft+'px';m.hidden=!m.hidden};
-$('#bExport').onclick=e=>{e.stopPropagation();const m=$('#xmenu');closePops('#xmenu');m.hidden=!m.hidden};
+$('#bExport').onclick=e=>{e.stopPropagation();const m=$('#xmenu');closePops('#xmenu');$('#mmenu').hidden=true;m.hidden=!m.hidden};
 $('#xmenu').addEventListener('click',()=>{$('#xmenu').hidden=true});
+$('#omenu').addEventListener('click',e=>{if(e.target.closest('button'))setTimeout(()=>{$('#omenu').hidden=true},150)});   // 항목을 고르면 메뉴를 닫는다 (한 번에 하나만 열려 있게)
 document.addEventListener('click',e=>{if(!e.target.closest('#omenu,#xmenu'))closePops()});
 /* ---- 단축어(/명령) 자동완성 ---- */
 let slashCmds=[],slashList=[],slashSel=0;
@@ -1046,7 +1047,7 @@ $('#bChrome').onclick=async()=>{
 /* ---- 생각 깊이(effort) 선택 / 도움말 ---- */
 let efforts=[],curEffort='';
 function setEffortBtn(){const e=efforts.find(x=>x.id===curEffort);$('#bEffort').textContent='생각 깊이: '+(e?e.label:'기본')+' ▾'}
-$('#bEffort').onclick=ev=>{ev.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
+$('#bEffort').onclick=ev=>{ev.stopPropagation();closePops();const mm=$('#mmenu');if(!mm.hidden&&mm.dataset.o==='e'){mm.hidden=true;return}mm.dataset.o='e';
   mm.innerHTML=efforts.map(x=>`<button data-k="e" data-id="${esc(x.id)}" class="${x.id===curEffort?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
 function helpTab(p){document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#helpModal .hp').forEach(x=>x.classList.toggle('on',x.id==='hp-'+p));$('#helpModal .hbody').scrollTop=0}
 document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.onclick=()=>helpTab(b.dataset.p));
@@ -1067,7 +1068,7 @@ $('#helpModal').addEventListener('mousedown',e=>{if(e.target.id==='helpModal')$(
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#helpModal').hidden)$('#helpModal').hidden=true});
 let models=[],curModel='';
 function setModelBtn(){const m=models.find(x=>x.id===curModel);$('#bModel').textContent='모델: '+(m?m.label:'기본')+' ▾'}
-$('#bModel').onclick=e=>{e.stopPropagation();const mm=$('#mmenu');if(!mm.hidden){mm.hidden=true;return}
+$('#bModel').onclick=e=>{e.stopPropagation();closePops();const mm=$('#mmenu');if(!mm.hidden&&mm.dataset.o==='m'){mm.hidden=true;return}mm.dataset.o='m';
   mm.innerHTML=models.map(x=>`<button data-id="${esc(x.id)}" class="${x.id===curModel?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
 $('#mmenu').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.k==='e'){curEffort=b.dataset.id;$('#mmenu').hidden=true;setEffortBtn();await api_().set_setting('effort',curEffort);return toast(curEffort?'다음 메시지부터 생각 깊이를 "'+b.querySelector('b').textContent+'"로 합니다':'다음 메시지부터 기본 생각 깊이를 씁니다')}

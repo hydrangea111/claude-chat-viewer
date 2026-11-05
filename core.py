@@ -12,6 +12,19 @@ COMPACT_HEAD = "This session is being continued from a previous conversation"
 # 사용자가 쓴 글이 아니라 Claude Code 가 자동으로 붙이는 안내 문구(맨 앞에 붙거나 단독으로 기록된다)
 NOTICE_RE = re.compile(r"^\s*(Your response above was cut off mid-stream\.[^\n]*|\[Request interrupted by user[^\]\n]*\])[ \t]*\n?", re.I)
 REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
+# 백그라운드 작업이 끝났을 때 하네스가 사용자 메시지처럼 끼워 넣는 알림. 내가 친 글이 아니므로 Claude Code 쪽 안내로 보여 준다
+TASKNOTE_RE = re.compile(r"<task-notification>(.*?)</task-notification>", re.S)
+_TN_TAG = re.compile(r"<(summary|status)>(.*?)</\1>", re.S)
+
+
+def task_notice(body):
+    d = {k: v.strip() for k, v in _TN_TAG.findall(body)}
+    head = "백그라운드 작업 알림"
+    if d.get("status"):
+        head += " · " + d["status"]
+    if d.get("summary"):
+        head += ": " + d["summary"]
+    return head + chr(10) * 2 + body.strip()
 FILE_TOOLS = {"Write": "생성", "Edit": "수정", "MultiEdit": "수정", "NotebookEdit": "수정", "Read": "읽기"}
 CMD_TOOLS = {"Bash", "PowerShell"}
 VIEW_LIMIT = 100_000
@@ -98,16 +111,29 @@ def parse(path, with_reminders=False):
         if not with_reminders:
             parts = [(k, REMINDER_RE.sub("", x).strip() if k == "text" else x) for k, x in parts]
         parts = [(k, x) for k, x in parts if k == "tool" or x.strip()]
-        if t == "user" and parts and parts[0][0] == "text":
-            m0 = NOTICE_RE.match(parts[0][1])
-            if m0:   # 맨 앞의 자동 안내 문구는 따로 떼어 Claude Code 쪽 안내로 보여 준다
-                rest = parts[0][1][m0.end():].strip()
-                notice = [("sys", m0.group(1).strip())]
+        if t == "user":
+            notice = []
+            kept = []
+            for k, x in parts:
+                if k == "text":
+                    for m1 in TASKNOTE_RE.finditer(x):
+                        notice.append(("sys", task_notice(m1.group(1))))
+                    x = TASKNOTE_RE.sub("", x).strip()
+                    if not x:
+                        continue
+                kept.append((k, x))
+            parts = kept
+            if parts and parts[0][0] == "text":
+                m0 = NOTICE_RE.match(parts[0][1])
+                if m0:   # 맨 앞의 자동 안내 문구는 따로 떼어 Claude Code 쪽 안내로 보여 준다
+                    rest = parts[0][1][m0.end():].strip()
+                    notice.append(("sys", m0.group(1).strip()))
+                    parts = ([("text", rest)] if rest else []) + parts[1:]
+            if notice:
                 if msgs and msgs[-1][0] == "claude":
                     msgs[-1][2].extend(notice)
                 else:
                     msgs.append(("claude", ts, notice))
-                parts = ([("text", rest)] if rest else []) + parts[1:]
         if parts:
             role = "user" if t == "user" else "claude"
             if msgs and msgs[-1][0] == role:  # 같은 화자의 연속 기록은 한 메시지로 합친다
