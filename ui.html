@@ -259,6 +259,22 @@ section.on{display:flex}
 .help .inqcnt{text-align:right;font-size:11.5px;color:var(--dim);margin:-2px 2px 6px}
 .help .inqrow{display:flex;align-items:center;gap:12px;margin:10px 0 6px}
 #inqStat{font-size:13px;color:var(--dim)}#inqStat.ok{color:var(--accent)}#inqStat.err{color:var(--err)}
+.xwrap{position:relative}
+#xmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:13;min-width:170px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
+#xmenu button{display:flex;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;text-align:left}
+#xmenu button:hover{background:var(--chip);color:var(--accent)}
+#bOpts{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 12px;font-size:11.5px;font-weight:600;cursor:pointer}
+#bOpts:hover{color:var(--text);border-color:var(--accent)}
+#bOpts.has{background:var(--accent);border-color:var(--accent);color:#fff}
+#omenu{position:absolute;bottom:calc(100% + 6px);z-index:12;min-width:210px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
+#omenu button{display:flex;width:100%;justify-content:flex-start;border:0;background:transparent;color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
+#omenu button:hover{background:var(--chip);color:var(--text)}
+#omenu button.on{background:var(--chip);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.crow button#bMic{width:38px;height:38px;border-radius:50%;padding:0;font-size:17px;flex-shrink:0;align-self:center;border:1px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer;display:grid;place-items:center}
+.crow button#bMic:hover{border-color:var(--accent)}
+.crow button#bMic.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.crow button#bMic.hear{background:var(--err);border-color:var(--err);color:#fff}
+.crow button#bMic:disabled{opacity:.6}
 .help .hfoot{display:flex;justify-content:flex-end;padding:12px 24px 16px;border-top:1px solid var(--line)}
 @media(max-width:640px){.help .steps{grid-template-columns:1fr}}
 .mrow{display:flex;align-items:center;gap:8px;position:relative}
@@ -329,7 +345,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.3</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.4</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -352,10 +368,13 @@ details.work[open] summary{margin-bottom:8px}
       <h1 id="title">대화를 선택하십시오<div class="sub" id="sub"></div><div class="sub" id="usage"></div></h1>
       <div class="actions">
         <label class="switch" title="Claude Code가 메시지에 몰래 끼워 넣는 안내문(system-reminder)을 대화에 함께 보여 줍니다. 평소엔 꺼 두십시오."><input type="checkbox" id="rem"><i></i>시스템 안내문</label>
-        <button class="btn" id="bCopyAll" title="이 대화의 글을 모두 복사 (도구 호출은 제외)">대화 복사</button>
-        <button class="btn" id="bBrowser">브라우저로 보기</button>
-        <button class="btn" id="bHtml">HTML 저장</button>
-        <button class="btn primary" id="bTxt">TXT 저장</button>
+        <div class="xwrap"><button class="btn primary" id="bExport" title="대화를 복사하거나 파일로 저장합니다">내보내기 ▾</button>
+          <div id="xmenu" hidden>
+            <button class="btn" id="bCopyAll" title="이 대화의 글을 모두 복사 (도구 호출은 제외)">대화 복사</button>
+            <button class="btn" id="bBrowser">브라우저로 보기</button>
+            <button class="btn" id="bHtml">HTML 저장</button>
+            <button class="btn" id="bTxt">TXT 저장</button>
+          </div></div>
       </div>
     </div>
     <div class="tabs" id="tabs">
@@ -379,11 +398,12 @@ details.work[open] summary{margin-bottom:8px}
         <button data-m="read" class="on" title="파일 읽기·검색만 허용">읽기만</button>
         <button data-m="edit" title="파일 수정까지 허용">파일 수정</button>
         <button data-m="all" title="명령 실행까지 전부 허용 (주의)">모두 허용</button>
-      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bTalk" title="대화 모드: 말풍선을 크게, 도구 작업은 접어 두고, 아래에 음성 상태 표시를 보여 줍니다">💬 대화 모드 꺼짐</button><button id="bTts" title="켜면 Claude의 답이 끝날 때 소리 내어 읽어 줍니다 (Esc로 멈춤)">🔊 읽어 주기 꺼짐</button><button id="bMic" title="켜면 마이크로 말해서 대화합니다. 말을 마치면 글자로 바꿔 보냅니다">🎙 음성 대화 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
+      </div><span class="sp"></span><button id="bOpts" title="웹 검색 · 브라우저 · 대화 모드 · 읽어 주기">옵션 ▾</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div><div id="omenu" hidden><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bTalk" title="대화 모드: 말풍선을 크게, 도구 작업은 접어 두고, 아래에 음성 상태 표시를 보여 줍니다">💬 대화 모드 꺼짐</button><button id="bTts" title="켜면 Claude의 답이 끝날 때 소리 내어 읽어 줍니다 (Esc로 멈춤)">🔊 읽어 주기 꺼짐</button></div></div>
       <div id="slash" hidden></div>
       <div id="vbar" hidden><div class="orb" id="orb" data-s="idle"></div><div class="vtxt"><b id="vstate">대기 중</b><span id="vsub"></span></div><button class="btn" id="vShut" hidden>읽기 멈춤</button><button class="btn primary" id="vMic">🎙 켜기</button></div>
       <div class="crow">
         <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈 · 응답 중 Esc 중지)"></textarea>
+        <button id="bMic" title="마이크로 말해서 대화합니다 (켜면 말을 마칠 때 글자로 바꿔 보냅니다)" aria-label="음성 대화">🎙</button>
         <button class="btn primary" id="bSend">보내기</button>
         <button class="btn" id="bStop" hidden title="응답 중지 (Esc)">중지</button>
       </div>
@@ -465,11 +485,11 @@ details.work[open] summary{margin-bottom:8px}
     <h4>응답 중지</h4>
     <p>Claude가 답하는 동안 <b>Esc</b>를 누르면 <b>중지</b> 버튼과 같이 응답을 멈춥니다. 창이나 메뉴가 열려 있으면 Esc는 먼저 그것을 닫습니다.</p>
     <h4>음성 대화</h4>
-    <p><b>🔊 읽어 주기</b>를 켜면 Claude의 답이 끝날 때 Windows 한국어 음성으로 읽어 줍니다. 코드와 주소는 읽지 않고, <b>Esc</b>를 누르면 멈춥니다.</p>
-    <p><b>🎙 음성 대화</b>를 켜면 마이크로 말해서 대화합니다. 말을 마치고 잠시 쉬면 글자로 바꿔 보내고, 답을 읽는 동안에는 듣기를 멈췄다가 다시 듣습니다. 처음 켤 때 음성 인식 프로그램과 한국어 모델(약 200MB)을 한 번 내려받으며, 인식은 이 PC 안에서만 이루어지고 음성은 밖으로 나가지 않습니다.</p>
+    <p>입력창 위 <b>옵션</b> 메뉴에서 <b>🔊 읽어 주기</b>를 켜면 Claude의 답이 끝날 때 Windows 한국어 음성으로 읽어 줍니다. 코드와 주소는 읽지 않고, <b>Esc</b>를 누르면 멈춥니다.</p>
+    <p>입력창 오른쪽의 <b>🎙</b> 버튼을 누르면 마이크로 말해서 대화합니다. 말을 마치고 잠시 쉬면 글자로 바꿔 보내고, 답을 읽는 동안에는 듣기를 멈췄다가 다시 듣습니다. 처음 켤 때 음성 인식 프로그램과 한국어 모델(약 200MB)을 한 번 내려받으며, 인식은 이 PC 안에서만 이루어지고 음성은 밖으로 나가지 않습니다.</p>
     <label class="chk"><input type="checkbox" id="voiceChk"> 말을 인식하면 바로 보내기 (끄면 입력창에만 넣습니다)</label>
     <h4>대화 모드</h4>
-    <p><b>💬 대화 모드</b>를 켜면 말풍선이 커지고, 파일 읽기·명령 같은 도구 작업은 "작업 N개 보기" 한 줄로 접힙니다. 입력창 위에는 듣는 중 · 생각하는 중 · 말하는 중을 보여 주는 표시가 나옵니다. 🎙 음성 대화와 🔊 읽어 주기와 함께 쓰면 말로 주고받기 편합니다.</p>
+    <p><b>옵션</b> 메뉴의 <b>💬 대화 모드</b>를 켜면 말풍선이 커지고, 파일 읽기·명령 같은 도구 작업은 "작업 N개 보기" 한 줄로 접힙니다. 입력창 위에는 듣는 중 · 생각하는 중 · 말하는 중을 보여 주는 표시가 나옵니다. 🎙 마이크와 🔊 읽어 주기와 함께 쓰면 말로 주고받기 편합니다.</p>
     <h4>토큰·한도 줄</h4>
     <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다. 한도 줄에 마우스를 올리면 초기화 시각이 나오고, 그 시각이 지나면 자동으로 0%로 바뀝니다.</p>
   </section>
@@ -829,6 +849,7 @@ async function send(){
 $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
 document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
+  if(e.key==='Escape'&&(!$('#omenu').hidden||!$('#xmenu').hidden)){closePops();e.preventDefault();return}
   if(e.key==='Escape'&&!e.isComposing&&!e.defaultPrevented&&speaking){stopSpeech();e.preventDefault();toast('읽기를 멈췄습니다');return}
   if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;
   if(!$('#modal').hidden||!$('#helpModal').hidden||!$('#slash').hidden||!$('#mmenu').hidden)return;
@@ -873,7 +894,7 @@ $('#bTts').onclick=async()=>{
 function updMic(){
   const b=$('#bMic');b.classList.toggle('on',micOn);b.classList.toggle('listen',micOn&&!speaking&&!micPending);b.classList.toggle('hear',false);
   vState();
-  b.textContent=!micOn?'🎙 음성 대화 꺼짐':micPending?'🎙 인식 중…':speaking?'🎙 읽는 중 (듣기 잠시 멈춤)':'🎙 듣는 중…'}
+  b.textContent='🎙';b.title=!micOn?'마이크로 말해서 대화합니다 (켜면 말을 마칠 때 글자로 바꿔 보냅니다)':micPending?'내 말을 글자로 바꾸는 중…':speaking?'Claude가 말하는 중 (듣기 잠시 멈춤)':'듣는 중입니다. 눌러서 끕니다'}
 function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
 function toPcm16(f32,inRate){
   let d=f32;if(inRate!==16000){const r=inRate/16000,n=Math.floor(f32.length/r);d=new Float32Array(n);for(let i=0;i<n;i++){const a=Math.floor(i*r),b=Math.min(f32.length,Math.floor((i+1)*r));let s=0;for(let j=a;j<b;j++)s+=f32[j];d[i]=s/Math.max(1,b-a)}}
@@ -896,11 +917,11 @@ async function micPrepare(){
     const b=$('#bMic');b.disabled=true;
     for(;;){
       await new Promise(r=>setTimeout(r,700));const s2=await api_().voice_status(),p=s2.prog;
-      if(p.error){b.disabled=false;b.textContent='🎙 음성 대화 꺼짐';toast('내려받지 못했습니다: '+p.error);return false}
-      b.textContent='🎙 받는 중… '+(p.total?Math.floor(p.done*100/p.total)+'% ('+p.phase+')':p.phase);
+      if(p.error){b.disabled=false;b.textContent='🎙';toast('내려받지 못했습니다: '+p.error);return false}
+      b.textContent='⏳';toast('음성 인식 준비 중… 내려받는 중 '+(p.total?Math.floor(p.done*100/p.total)+'% ('+p.phase+')':p.phase));
       if(s2.ready&&!p.running)break}
     b.disabled=false}
-  $('#bMic').textContent='🎙 엔진 준비 중…';
+  $('#bMic').textContent='⏳';toast('음성 인식 엔진을 준비하는 중입니다…');
   if(!await api_().voice_prepare()){toast('음성 인식 엔진을 시작하지 못했습니다');return false}
   return true}
 async function micStart(){
@@ -949,6 +970,15 @@ function vState(){
 $('#bTalk').onclick=async()=>{talkOn=!talkOn;setTalkBtn();renderChat(true);await api_().set_setting('talk',talkOn);toast(talkOn?'대화 모드를 켰습니다':'대화 모드를 껐습니다')};
 $('#vMic').onclick=()=>$('#bMic').click();
 $('#vShut').onclick=()=>stopSpeech();
+
+/* ---- 메뉴(옵션 · 내보내기) ---- */
+function closePops(except){['#omenu','#xmenu'].forEach(q=>{if(q!==except)$(q).hidden=true})}
+function updOpts(){const n=document.querySelectorAll('#omenu button.on').length,b=$('#bOpts');b.classList.toggle('has',n>0);b.textContent=n?'옵션 · '+n+'개 켜짐 ▾':'옵션 ▾'}
+new MutationObserver(updOpts).observe($('#omenu'),{subtree:true,attributes:true,childList:true,characterData:true});updOpts();
+$('#bOpts').onclick=e=>{e.stopPropagation();const m=$('#omenu');closePops('#omenu');$('#mmenu').hidden=true;m.style.left=$('#bOpts').offsetLeft+'px';m.hidden=!m.hidden};
+$('#bExport').onclick=e=>{e.stopPropagation();const m=$('#xmenu');closePops('#xmenu');m.hidden=!m.hidden};
+$('#xmenu').addEventListener('click',()=>{$('#xmenu').hidden=true});
+document.addEventListener('click',e=>{if(!e.target.closest('#omenu,#xmenu'))closePops()});
 /* ---- 단축어(/명령) 자동완성 ---- */
 let slashCmds=[],slashList=[],slashSel=0;
 async function loadCmds(){try{slashCmds=await api_().get_commands()||[]}catch(e){}}
