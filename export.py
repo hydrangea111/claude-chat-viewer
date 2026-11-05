@@ -77,6 +77,8 @@ def to_txt(data, title, sid=""):
                 L += ["  [생각]"] + block(x, "    ")
             elif k == "compact":
                 L += ["  [대화 압축: 이전 내용 요약]"] + block(x, "    ")
+            elif k == "sys":
+                L += ["  [시스템 안내]"] + block(x, "    ")
             else:
                 head = f"  [도구 호출 T{num[id(x)]:03d}] {x['name']}"
                 if x["error"]:
@@ -234,6 +236,9 @@ def to_html(data, title, sid=""):
         for k, x in parts:
             if k == "text":
                 inner.append(f'<div class="bubble">{_md(x)}</div>')
+            elif k == "sys":
+                inner.append(f'<details class="think"><summary><span class="nm" style="font-family:inherit;color:var(--dim)">시스템 안내</span>'
+                             f'<span class="sm">{_e(x[:80])}</span></summary>{_code(x, False)}</details>')
             elif k == "compact":
                 inner.append(f'<details class="think"><summary><span class="nm" style="font-family:inherit;color:var(--dim)">대화 압축</span>'
                              f'<span class="sm">이전 내용을 요약해 이어 갑니다</span></summary>{_code(x, False)}</details>')

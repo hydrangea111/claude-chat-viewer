@@ -9,6 +9,8 @@ from pathlib import Path
 
 PROJECTS = Path.home() / ".claude" / "projects"
 COMPACT_HEAD = "This session is being continued from a previous conversation"
+# 사용자가 쓴 글이 아니라 Claude Code 가 자동으로 붙이는 안내 문구(맨 앞에 붙거나 단독으로 기록된다)
+NOTICE_RE = re.compile(r"^\s*(Your response above was cut off mid-stream\.[^\n]*|\[Request interrupted by user[^\]\n]*\])[ \t]*\n?", re.I)
 REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
 FILE_TOOLS = {"Write": "생성", "Edit": "수정", "MultiEdit": "수정", "NotebookEdit": "수정", "Read": "읽기"}
 CMD_TOOLS = {"Bash", "PowerShell"}
@@ -55,7 +57,7 @@ def session_info(path):
 
 
 def parse(path, with_reminders=False):
-    """-> dict(msgs, files, cmds, others). msgs: [(role, ts, [(kind, payload)])], kind: text|thinking|compact|tool"""
+    """-> dict(msgs, files, cmds, others). msgs: [(role, ts, [(kind, payload)])], kind: text|thinking|compact|sys|tool"""
     tools, msgs = {}, []
     for r in read_lines(path):
         t = r.get("type")
@@ -96,6 +98,16 @@ def parse(path, with_reminders=False):
         if not with_reminders:
             parts = [(k, REMINDER_RE.sub("", x).strip() if k == "text" else x) for k, x in parts]
         parts = [(k, x) for k, x in parts if k == "tool" or x.strip()]
+        if t == "user" and parts and parts[0][0] == "text":
+            m0 = NOTICE_RE.match(parts[0][1])
+            if m0:   # 맨 앞의 자동 안내 문구는 따로 떼어 Claude Code 쪽 안내로 보여 준다
+                rest = parts[0][1][m0.end():].strip()
+                notice = [("sys", m0.group(1).strip())]
+                if msgs and msgs[-1][0] == "claude":
+                    msgs[-1][2].extend(notice)
+                else:
+                    msgs.append(("claude", ts, notice))
+                parts = ([("text", rest)] if rest else []) + parts[1:]
         if parts:
             role = "user" if t == "user" else "claude"
             if msgs and msgs[-1][0] == role:  # 같은 화자의 연속 기록은 한 메시지로 합친다
