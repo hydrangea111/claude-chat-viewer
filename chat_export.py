@@ -27,10 +27,11 @@ import webview
 
 import core
 import export
+import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v4.7"
+TITLE = "Claude Code 대화 뷰어 v4.8"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -702,6 +703,23 @@ class Api:
     def set_clipboard(self, text):
         return clipboard_set(text)
 
+    # ---- 음성 대화: 내 PC 안에서 돌아가는 음성 인식(whisper.cpp) ----
+    def voice_status(self):
+        return voice.status()
+
+    def voice_download(self):
+        return voice.download()
+
+    def voice_prepare(self):
+        return voice.start()
+
+    def voice_transcribe(self, b64):
+        import base64
+        try:
+            return voice.transcribe(base64.b64decode(b64))
+        except Exception as e:
+            return {"ok": False, "error": str(e)[:200]}
+
     def get_setting(self, key):
         return read_settings().get(key)
 
@@ -918,6 +936,7 @@ if __name__ == "__main__":
                                        width=1280, height=800, min_size=(900, 560), background_color="#0f1115")
     api._window.events.loaded += close_splash  # 화면이 그려지면 '여는 중' 창을 닫는다
     api._window.events.closed += api.stop  # 창을 닫으면 응답 중이던 claude도 같이 끝낸다
+    api._window.events.closed += voice.stop  # 음성 인식 엔진도 같이 끝낸다
     threading.Thread(target=set_window_icon, daemon=True).start()
     try:  # 파일을 창에 끌어다 놓으면 주소창에 입력되고 열린다(pywebview 5 이상)
         from webview.dom import DOMEventHandler

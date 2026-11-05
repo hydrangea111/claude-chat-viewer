@@ -264,6 +264,12 @@ section.on{display:flex}
 #bChrome{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
 #bChrome:hover{color:var(--text);border-color:var(--accent)}
 #bChrome.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#bTts,#bMic{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
+#bTts:hover,#bMic:hover{color:var(--text);border-color:var(--accent)}
+#bTts.on,#bMic.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#bMic.listen{animation:micp 1.6s ease-in-out infinite}
+#bMic.hear{background:var(--err);border-color:var(--err);color:#fff}
+@keyframes micp{50%{box-shadow:0 0 0 4px rgba(200,100,60,.28)}}
 #bModel{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 11px;font-size:11.5px;font-weight:600;cursor:pointer}
 #bModel:hover{color:var(--text);border-color:var(--accent)}
 #mmenu{position:absolute;right:0;bottom:calc(100% + 6px);z-index:12;min-width:230px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
@@ -293,7 +299,7 @@ section.on{display:flex}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.7</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v4.8</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -343,7 +349,7 @@ section.on{display:flex}
         <button data-m="read" class="on" title="파일 읽기·검색만 허용">읽기만</button>
         <button data-m="edit" title="파일 수정까지 허용">파일 수정</button>
         <button data-m="all" title="명령 실행까지 전부 허용 (주의)">모두 허용</button>
-      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
+      </div><span class="sp"></span><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bTts" title="켜면 Claude의 답이 끝날 때 소리 내어 읽어 줍니다 (Esc로 멈춤)">🔊 읽어 주기 꺼짐</button><button id="bMic" title="켜면 마이크로 말해서 대화합니다. 말을 마치면 글자로 바꿔 보냅니다">🎙 음성 대화 꺼짐</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div></div>
       <div id="slash" hidden></div>
       <div class="crow">
         <textarea id="msg" rows="1" placeholder="Claude에게 이어서 말하기…  (Enter 전송 · Shift+Enter 줄바꿈 · 응답 중 Esc 중지)"></textarea>
@@ -427,6 +433,10 @@ section.on{display:flex}
     <label class="chk"><input type="checkbox" id="updChk"> 시작할 때 새 버전이 있는지 확인하기</label>
     <h4>응답 중지</h4>
     <p>Claude가 답하는 동안 <b>Esc</b>를 누르면 <b>중지</b> 버튼과 같이 응답을 멈춥니다. 창이나 메뉴가 열려 있으면 Esc는 먼저 그것을 닫습니다.</p>
+    <h4>음성 대화</h4>
+    <p><b>🔊 읽어 주기</b>를 켜면 Claude의 답이 끝날 때 Windows 한국어 음성으로 읽어 줍니다. 코드와 주소는 읽지 않고, <b>Esc</b>를 누르면 멈춥니다.</p>
+    <p><b>🎙 음성 대화</b>를 켜면 마이크로 말해서 대화합니다. 말을 마치고 잠시 쉬면 글자로 바꿔 보내고, 답을 읽는 동안에는 듣기를 멈췄다가 다시 듣습니다. 처음 켤 때 음성 인식 프로그램과 한국어 모델(약 200MB)을 한 번 내려받으며, 인식은 이 PC 안에서만 이루어지고 음성은 밖으로 나가지 않습니다.</p>
+    <label class="chk"><input type="checkbox" id="voiceChk"> 말을 인식하면 바로 보내기 (끄면 입력창에만 넣습니다)</label>
     <h4>토큰·한도 줄</h4>
     <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다. 한도 줄에 마우스를 올리면 초기화 시각이 나오고, 그 시각이 지나면 자동으로 0%로 바뀝니다.</p>
   </section>
@@ -712,7 +722,7 @@ async function tick(){
     if(p.path&&cur===p.path&&p.ver&&(!lastVer||p.ver[0]!==lastVer[0]||p.ver[1]!==lastVer[1])){lastVer=p.ver;await refresh()}
     if(p.running)return;
     clearInterval(pollTimer);running=false;pending=null;setRunning(false);
-    if(cur===p.path||(!cur&&p.path)){await refresh();['files','cmds','others'].forEach(renderSplit)}
+    if(cur===p.path||(!cur&&p.path)){await refresh();['files','cmds','others'].forEach(renderSplit);if(ttsOn&&!p.error&&!userStopped)speakLast()}
     await loadSessions();const s=sessions.find(x=>x.path===cur);if(s){curInfo=s;$('#title').firstChild.textContent=s.title}
     loadCmds();loadLimits();
     if(p.model)lastModel=p.model;
@@ -749,6 +759,7 @@ $('#bAttach').onclick=async()=>insertPaths(await api_().pick_files());
 const cb=$('#cbox');
 /* 실제 전송 (새 대화/이어 말하기 공통). 성공하면 true */
 async function dispatch(t,files){
+  stopSpeech();
   const r=await api_().send(t,curMode,files,curModel,chromeOn,webOn,curEffort);if(!r.ok){toast(r.error);return false}
   lastSent=t;pending=t;lastVer=null;
   if(!data)data={msgs:[],files:[],cmds:[],others:[]};
@@ -771,6 +782,7 @@ async function send(){
 $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
 document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
+  if(e.key==='Escape'&&!e.isComposing&&!e.defaultPrevented&&speaking){stopSpeech();e.preventDefault();toast('읽기를 멈췄습니다');return}
   if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;
   if(!$('#modal').hidden||!$('#helpModal').hidden||!$('#slash').hidden||!$('#mmenu').hidden)return;
   e.preventDefault();userStopped=true;api_().stop();toast('응답을 중지했습니다')});
@@ -785,6 +797,94 @@ $('#msg').onkeydown=e=>{
     if(k==='Escape'){e.preventDefault();$('#slash').hidden=true;return}
   }
   if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}};
+
+/* ---- 음성 대화: 읽어 주기(TTS, Windows 한국어 음성) + 말하기(내 PC 안의 whisper.cpp 로 글자 변환) ---- */
+let ttsOn=false,speaking=false,micOn=false,micCtx=null,micStream=null,micNode=null,micSink=null,micPending=0,micChain=Promise.resolve(),voiceAuto=true,holdUntil=0;
+const synth=window.speechSynthesis;
+function setTtsBtn(){const b=$('#bTts');b.classList.toggle('on',ttsOn);b.textContent=ttsOn?'🔊 읽어 주기 켜짐':'🔊 읽어 주기 꺼짐'}
+function speechClean(t){
+  return t.replace(/```[\s\S]*?```/g,' 코드는 생략합니다. ').replace(/`([^`]*)`/g,'$1').replace(/!?\[([^\]]*)\]\([^)]*\)/g,'$1')
+    .replace(/https?:\/\/\S+/g,'링크').replace(/^\s*#{1,6}\s*/gm,'').replace(/^\s*[-*+]\s+/gm,'').replace(/^\s*\d+[.)]\s+/gm,'')
+    .replace(/[*_~>|]/g,' ').replace(/\s*\n+\s*/g,'. ').replace(/\s+/g,' ').replace(/\.(\s*\.)+/g,'.').trim()}
+function stopSpeech(){try{synth.cancel()}catch(e){}speaking=false;holdUntil=Date.now()+500;updMic()}
+function speak(raw){
+  const text=speechClean(raw);if(!text||!synth)return;
+  try{synth.cancel()}catch(e){}
+  const chunks=text.split(/(?<=[.!?。…])\s+/).flatMap(c=>c.length<=140?[c]:c.match(/.{1,140}(\s|$)/g)||[c]).map(c=>c.trim()).filter(Boolean);
+  const voice=(synth.getVoices()||[]).find(v=>/^ko/i.test(v.lang));
+  speaking=true;updMic();
+  chunks.forEach((c,i)=>{const u=new SpeechSynthesisUtterance(c);u.lang='ko-KR';if(voice)u.voice=voice;u.rate=1.05;
+    const fin=()=>{if(i===chunks.length-1){speaking=false;holdUntil=Date.now()+700;updMic()}};
+    u.onend=fin;u.onerror=fin;synth.speak(u)})}
+function speakLast(){
+  if(!data||!data.msgs.length)return;const m=data.msgs[data.msgs.length-1];if(m.role!=='claude')return;
+  const tp=[...m.parts].reverse().find(p=>p.k==='text'&&p.t.trim());if(tp)speak(splitChoices(tp.t).text)}
+$('#bTts').onclick=async()=>{
+  ttsOn=!ttsOn;setTtsBtn();if(!ttsOn)stopSpeech();
+  await api_().set_setting('tts',ttsOn);
+  toast(ttsOn?'답이 끝나면 소리 내어 읽어 줍니다 (Esc로 멈춤)':'읽어 주기를 껐습니다')};
+function updMic(){
+  const b=$('#bMic');b.classList.toggle('on',micOn);b.classList.toggle('listen',micOn&&!speaking&&!micPending);b.classList.toggle('hear',false);
+  b.textContent=!micOn?'🎙 음성 대화 꺼짐':micPending?'🎙 인식 중…':speaking?'🎙 읽는 중 (듣기 잠시 멈춤)':'🎙 듣는 중…'}
+function b64(u8){let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s)}
+function toPcm16(f32,inRate){
+  let d=f32;if(inRate!==16000){const r=inRate/16000,n=Math.floor(f32.length/r);d=new Float32Array(n);for(let i=0;i<n;i++){const a=Math.floor(i*r),b=Math.min(f32.length,Math.floor((i+1)*r));let s=0;for(let j=a;j<b;j++)s+=f32[j];d[i]=s/Math.max(1,b-a)}}
+  const o=new Int16Array(d.length);for(let i=0;i<d.length;i++){const v=Math.max(-1,Math.min(1,d[i]));o[i]=v<0?v*32768:v*32767}return new Uint8Array(o.buffer)}
+function onUtterance(chunks,rate){
+  let n=0;chunks.forEach(c=>n+=c.length);const all=new Float32Array(n);let o=0;chunks.forEach(c=>{all.set(c,o);o+=c.length});
+  const pcm=toPcm16(all,rate);micPending++;updMic();
+  micChain=micChain.then(async()=>{
+    try{const r=await api_().voice_transcribe(b64(pcm));
+      if(!r.ok){toast('음성 인식 오류: '+r.error)}
+      else if(r.text&&micOn){const t=$('#msg');t.value=t.value.trim()?t.value.trim()+' '+r.text:r.text;autosize();
+        if(voiceAuto&&claudeOk)await send();else t.focus()}}
+    catch(e){toast('음성 인식 오류: '+e)}
+    finally{micPending=Math.max(0,micPending-1);updMic()}})}
+async function micPrepare(){
+  const st=await api_().voice_status();
+  if(!st.ready){
+    if(!await ask('음성 인식을 준비하시겠습니까?','내 말을 글자로 바꾸는 프로그램(whisper.cpp)과 한국어 모델을 한 번만 내려받습니다.\n\n  · 약 '+st.need_mb+'MB  (엔진: github.com/ggml-org/whisper.cpp · 모델: huggingface.co/ggerganov/whisper.cpp)\n  · 받은 파일은 SHA-256을 확인한 뒤에만 사용합니다\n  · 인식은 이 PC 안에서만 이루어지고, 음성은 밖으로 나가지 않습니다\n  · 마이크 사용 권한이 필요합니다','받기'))return false;
+    await api_().voice_download();
+    const b=$('#bMic');b.disabled=true;
+    for(;;){
+      await new Promise(r=>setTimeout(r,700));const s2=await api_().voice_status(),p=s2.prog;
+      if(p.error){b.disabled=false;b.textContent='🎙 음성 대화 꺼짐';toast('내려받지 못했습니다: '+p.error);return false}
+      b.textContent='🎙 받는 중… '+(p.total?Math.floor(p.done*100/p.total)+'% ('+p.phase+')':p.phase);
+      if(s2.ready&&!p.running)break}
+    b.disabled=false}
+  $('#bMic').textContent='🎙 엔진 준비 중…';
+  if(!await api_().voice_prepare()){toast('음성 인식 엔진을 시작하지 못했습니다');return false}
+  return true}
+async function micStart(){
+  if(micOn)return;
+  if(!await micPrepare()){updMic();return}
+  try{micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}})}
+  catch(e){toast('마이크를 쓸 수 없습니다. 마이크 연결과 Windows의 마이크 권한(설정 → 개인 정보 → 마이크)을 확인하십시오');updMic();return}
+  const AC=window.AudioContext||window.webkitAudioContext;
+  try{micCtx=new AC({sampleRate:16000})}catch(e){micCtx=new AC()}
+  const src=micCtx.createMediaStreamSource(micStream),rate=micCtx.sampleRate;
+  micNode=micCtx.createScriptProcessor(4096,1,1);micSink=micCtx.createGain();micSink.gain.value=0;
+  src.connect(micNode);micNode.connect(micSink);micSink.connect(micCtx.destination);
+  let pre=[],cur2=[],inSp=false,spMs=0,silMs=0,floor=0.004;
+  micNode.onaudioprocess=ev=>{
+    const x=new Float32Array(ev.inputBuffer.getChannelData(0));const ms=x.length/rate*1000;
+    if(speaking||Date.now()<holdUntil||!micOn){pre=[];cur2=[];inSp=false;spMs=silMs=0;return}   // 읽는 동안에는 듣지 않는다(내 스피커 소리를 다시 듣지 않게)
+    let e=0;for(let i=0;i<x.length;i++)e+=x[i]*x[i];const rms=Math.sqrt(e/x.length),thr=Math.max(0.012,floor*3.5);
+    if(!inSp)floor=floor*0.95+Math.min(rms,0.05)*0.05;
+    if(rms>thr){if(!inSp){inSp=true;cur2=pre.slice();spMs=0;$('#bMic').classList.add('hear')}cur2.push(x);spMs+=ms;silMs=0}
+    else if(inSp){cur2.push(x);silMs+=ms}
+    else{pre.push(x);if(pre.length>3)pre.shift()}
+    if(inSp&&(silMs>=1000||spMs+silMs>=30000)){
+      const ok=spMs>=400;const ch=cur2;inSp=false;cur2=[];pre=[];spMs=silMs=0;$('#bMic').classList.remove('hear');
+      if(ok)onUtterance(ch,rate)}};
+  micOn=true;if(!ttsOn){ttsOn=true;setTtsBtn();api_().set_setting('tts',true)}
+  updMic();toast('말씀하십시오. 말을 마치고 잠시 쉬면 글자로 바꿔 보냅니다 (읽어 주기도 함께 켰습니다)')}
+function micStop(){
+  micOn=false;try{micNode&&(micNode.onaudioprocess=null,micNode.disconnect())}catch(e){}
+  try{micStream&&micStream.getTracks().forEach(t=>t.stop())}catch(e){}
+  try{micCtx&&micCtx.close()}catch(e){}
+  micNode=micStream=micCtx=micSink=null;$('#bMic').classList.remove('hear');updMic()}
+$('#bMic').onclick=()=>{if(micOn){micStop();toast('음성 대화를 껐습니다')}else micStart()};
 /* ---- 단축어(/명령) 자동완성 ---- */
 let slashCmds=[],slashList=[],slashSel=0;
 async function loadCmds(){try{slashCmds=await api_().get_commands()||[]}catch(e){}}
@@ -824,7 +924,8 @@ $('#bEffort').onclick=ev=>{ev.stopPropagation();const mm=$('#mmenu');if(!mm.hidd
   mm.innerHTML=efforts.map(x=>`<button data-k="e" data-id="${esc(x.id)}" class="${x.id===curEffort?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
 function helpTab(p){document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#helpModal .hp').forEach(x=>x.classList.toggle('on',x.id==='hp-'+p));$('#helpModal .hbody').scrollTop=0}
 document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.onclick=()=>helpTab(b.dataset.p));
-$('#bHelp').onclick=async()=>{helpTab('cmd');try{$('#updChk').checked=(await api_().get_setting('update_check'))!==false}catch(e){}$('#helpModal').hidden=false};
+$('#bHelp').onclick=async()=>{helpTab('cmd');try{$('#updChk').checked=(await api_().get_setting('update_check'))!==false;$('#voiceChk').checked=voiceAuto}catch(e){}$('#helpModal').hidden=false};
+$('#voiceChk').onchange=async e=>{voiceAuto=e.target.checked;await api_().set_setting('voice_auto',voiceAuto);toast(voiceAuto?'말을 인식하면 바로 보냅니다':'말을 인식하면 입력창에만 넣습니다')};
 $('#updChk').onchange=async e=>{await api_().set_setting('update_check',e.target.checked);toast(e.target.checked?'시작할 때 새 버전을 확인합니다':'새 버전 확인을 껐습니다')};
 $('#helpClose').onclick=()=>{$('#helpModal').hidden=true};$('#helpX').onclick=()=>{$('#helpModal').hidden=true};
 $('#helpModal').addEventListener('mousedown',e=>{if(e.target.id==='helpModal')$('#helpModal').hidden=true});
@@ -978,6 +1079,7 @@ window.addEventListener('pywebviewready',async()=>{
   try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
   try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();chromeOn=(await api_().get_setting('chrome'))===true;setChromeBtn();{const sm2=await api_().get_setting('mode');if(['read','edit','all'].includes(sm2)){curMode=sm2;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x.dataset.m===sm2));setHint()}}efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
+  try{ttsOn=(await api_().get_setting('tts'))===true;setTtsBtn();voiceAuto=(await api_().get_setting('voice_auto'))!==false;updMic()}catch(e){}
   const init=await api_().get_initial();
   await loadSessions();
   bootDone();checkUpdate();
