@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>Claude Code 대화 뷰어</title>
+<title>Claude Code 대화창</title>
 <style>
 :root{
   --bg:#f6f5f2;--panel:#ffffff;--side:#efede8;--line:#e3e0d9;--text:#1f1d1a;--dim:#7a766d;
@@ -273,7 +273,8 @@ section.on{display:flex}
 #omenu{position:absolute;bottom:calc(100% + 6px);z-index:12;min-width:210px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
 #omenu button{display:flex;width:100%;justify-content:flex-start;border:0;background:transparent;color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
 #omenu button:hover{background:var(--chip);color:var(--text)}
-#omenu button.on{background:var(--chip);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+#omenu button.on{background:var(--chip);color:var(--accent)}
+#omenu button.on::after{content:'✓';margin-left:auto;padding-left:14px;font-weight:700}
 .crow button#bMic{width:38px;height:38px;border-radius:50%;padding:0;font-size:17px;flex-shrink:0;align-self:center;border:1px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer;display:grid;place-items:center}
 .crow button#bMic:hover{border-color:var(--accent)}
 .crow button#bMic.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -326,10 +327,11 @@ details.work[open] summary{margin-bottom:8px}
 #mmenu button{display:flex;width:100%;justify-content:space-between;gap:14px;align-items:baseline;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:7px 10px;border-radius:8px;cursor:pointer;text-align:left}
 #mmenu button span{color:var(--dim);font-size:11.5px}
 #mmenu button:hover{background:var(--chip)}
-#mmenu button.on{background:var(--chip);box-shadow:inset 3px 0 0 var(--accent)}
+#mmenu button.on{background:var(--chip);color:var(--accent);font-weight:600}
+#mmenu button.on::after{content:'✓';order:3;margin-left:6px;font-weight:700}
 #slash{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:11;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px;max-height:280px;overflow:auto}
 #slash .si{padding:6px 10px;border-radius:8px;cursor:pointer;font-size:13px}
-#slash .si.on,#slash .si:hover{background:var(--chip);box-shadow:inset 3px 0 0 var(--accent)}
+#slash .si.on,#slash .si:hover{background:var(--chip);color:var(--accent)}
 #slash .hint{padding:4px 10px 2px;color:var(--dim);font-size:11px}
 .choices{margin-top:8px;display:flex;flex-direction:column;gap:10px}
 .choices .ct{font-weight:600;font-size:13px;margin-bottom:6px}
@@ -338,6 +340,12 @@ details.work[open] summary{margin-bottom:8px}
 .cbtn:hover:not(:disabled){background:var(--accent);color:#fff}
 .cbtn span{font-size:11.5px;opacity:.75}
 .cbtn:disabled{border-color:var(--line);color:var(--dim);cursor:default}
+.choices .cpick{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--panel));color:var(--accent);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600}
+.choices .cpick::before{content:'✓'}
+.choices .cmore summary{cursor:pointer;color:var(--dim);font-size:12px;list-style:none}
+.choices .cmore summary::-webkit-details-marker{display:none}
+.choices .cmore summary::before{content:'▸ '}.choices .cmore[open] summary::before{content:'▾ '}
+.choices .cmore .co{margin-top:8px}
 .choices .chint2{color:var(--dim);font-size:11.5px}
 #alertbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 16px;background:color-mix(in srgb,var(--err) 14%,var(--bg));border-bottom:1px solid var(--err);font-size:13px}
 #alertbar[hidden]{display:none}
@@ -349,7 +357,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.6</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -458,7 +466,7 @@ details.work[open] summary{margin-bottom:8px}
   <section class="hp" id="hp-err">
     <h4>메시지가 떴을 때</h4>
     <div class="errs">
-      <div class="ec"><b>"로그인이 풀렸습니다"</b><span>터미널(Win+R → cmd)에서 <code>claude</code> 를 실행하고 <code>/login</code> 을 입력해 로그인한 뒤, 뷰어로 돌아와 다시 보내십시오.</span></div>
+      <div class="ec"><b>"로그인이 풀렸습니다"</b><span>터미널(Win+R → cmd)에서 <code>claude</code> 를 실행하고 <code>/login</code> 을 입력해 로그인한 뒤, 대화창으로 돌아와 다시 보내십시오.</span></div>
       <div class="ec"><b>"인터넷에 연결되지 않았습니다"</b><span>인터넷·VPN·회사 네트워크를 확인하십시오. 보내려던 말은 입력창에 돌려놓습니다.</span></div>
       <div class="ec"><b>"사용량 한도에 걸렸습니다"</b><span>한도가 풀릴 때까지 기다리십시오. 제목 아래 <b>한도</b> 줄(마지막 응답 기준)을 참고하십시오.</span></div>
       <div class="ec"><b>"서버가 혼잡합니다"</b><span>잠시 뒤에 다시 보내십시오.</span></div>
@@ -469,7 +477,7 @@ details.work[open] summary{margin-bottom:8px}
       <div class="ec"><b>선택 버튼이 안 나옵니다</b><span>Claude가 선택지를 정해진 형식으로 쓰지 않은 경우입니다. 입력창에 직접 답하십시오.</span></div>
       <div class="ec"><b>웹 검색이 안 됩니다</b><span>웹 검색 스위치를 켜십시오. 꺼져 있으면 읽기만·파일 수정 모드에서는 막힙니다.</span></div>
       <div class="ec"><b>브라우저 연결이 안 됩니다</b><span>브라우저 스위치를 켜고, Chrome에 Claude 확장 프로그램이 설치·연결돼 있는지 확인하십시오.</span></div>
-      <div class="ec"><b>Claude Code가 없다고 나옵니다</b><span>Claude Code를 설치하고 로그인한 뒤 뷰어를 다시 여십시오. <a href="https://dh-chat-viewer.web.app/claude-install.html" target="_blank" rel="noopener">설치하는 방법</a>.</span></div>
+      <div class="ec"><b>Claude Code가 없다고 나옵니다</b><span>Claude Code를 설치하고 로그인한 뒤 대화창을 다시 여십시오. <a href="https://dh-chat-viewer.web.app/claude-install.html" target="_blank" rel="noopener">설치하는 방법</a>.</span></div>
       <div class="ec"><b>exe가 Windows에 막힙니다</b><span>"애플리케이션 제어 정책…"으로 막히면 <a href="https://dh-chat-viewer.web.app/python-install.html" target="_blank" rel="noopener">Python으로 실행하는 방법</a>을 보십시오.</span></div>
       <div class="ec"><b>창이 늦게 뜹니다</b><span>PC가 느리거나 처음 실행할 때는 최대 수십 초 걸릴 수 있습니다. 잠시 기다려 주십시오.</span></div>
     </div>
@@ -482,7 +490,7 @@ details.work[open] summary{margin-bottom:8px}
     <h4>"다음부터 보지 않기"</h4>
     <p>파일 수정·모든 도구 허용·브라우저 켜기를 누를 때 나오는 확인창에서 "다음부터 이 확인창 보지 않기"를 고르면 그 확인창이 다시 나오지 않습니다.</p>
     <h4>기억되는 설정</h4>
-    <p>허용 범위, 웹 검색, 브라우저, 모델, 생각 깊이는 뷰어를 껐다 켜도 마지막 선택이 유지됩니다.</p>
+    <p>허용 범위, 웹 검색, 브라우저, 모델, 생각 깊이는 대화창을 껐다 켜도 마지막 선택이 유지됩니다.</p>
     <h4>새 버전 알림</h4>
     <p>시작할 때 웹사이트의 작은 파일(version.json) 하나를 내려받아 새 버전이 있는지만 확인합니다. 내 정보는 보내지 않습니다. 새 버전이 있으면 위에 안내 줄이 뜹니다.</p>
     <label class="chk"><input type="checkbox" id="updChk"> 시작할 때 새 버전이 있는지 확인하기</label>
@@ -509,7 +517,7 @@ details.work[open] summary{margin-bottom:8px}
   </section>
   <section class="hp" id="hp-lic">
     <h4>이 프로그램</h4>
-    <p><b>Claude Code 대화 뷰어</b>는 MIT 라이선스로 공개된 프로그램입니다. 자유롭게 쓰고, 고치고, 나눠 줄 수 있습니다(저작권 표시와 아래 문구를 함께 두는 조건).</p>
+    <p><b>Claude Code 대화창</b>는 MIT 라이선스로 공개된 프로그램입니다. 자유롭게 쓰고, 고치고, 나눠 줄 수 있습니다(저작권 표시와 아래 문구를 함께 두는 조건).</p>
 <pre class="lic">MIT License
 
 Copyright (c) 2026 hydrangea111
@@ -606,8 +614,25 @@ function splitChoices(t){
   try{const j=JSON.parse(m[1]);const opts=(Array.isArray(j.options)?j.options:[]).map(String).filter(Boolean).slice(0,8);
     if(opts.length>=2)return {text:(t.slice(0,m.index)+t.slice(m.index+m[0].length)).trim(),ch:{q:String(j.question||''),opts}}}catch(e){}
   return {text:t,ch:null}}
+/* 이 선택지에 대한 내 답: 바로 다음 내 메시지, 방금 보낸 중이면 보낸 글 */
+function choiceAnswer(mi){
+  const n=data.msgs[mi+1];
+  if(n&&n.role==='user')return n.parts.filter(p=>p.k==='text').map(p=>p.t).join(String.fromCharCode(10)).trim();
+  if(mi===data.msgs.length-1&&pending)return String(pending).trim();
+  return null}
+function pickOf(q,ans){
+  if(!ans)return null;
+  const exact=q.opts.find(o=>ans===o.label);if(exact)return exact;
+  return q.opts.filter(o=>o.label&&ans.includes(o.label)).sort((a,b)=>b.label.length-a.label.length)[0]||null}
 function choiceHtml(qs,mi,active){
-  return '<div class="choices">'+qs.map((q,qi)=>`<div class="cq">${q.q?`<div class="ct">${esc(q.q)}</div>`:''}<div class="co">${q.opts.map((o,oi)=>`<button class="cbtn" data-ch="${mi}:${qi}:${oi}"${active?'':' disabled'}${o.desc?` title="${esc(o.desc)}"`:''}><b>${esc(o.label)}</b>${o.desc?`<span>${esc(o.desc)}</span>`:''}</button>`).join('')}</div></div>`).join('')
+  const ans=active?null:choiceAnswer(mi);
+  const btn=(q,qi,o,oi)=>`<button class="cbtn" data-ch="${mi}:${qi}:${oi}"${active?'':' disabled'}${o.desc?` title="${esc(o.desc)}"`:''}><b>${esc(o.label)}</b>${o.desc?`<span>${esc(o.desc)}</span>`:''}</button>`;
+  return '<div class="choices">'+qs.map((q,qi)=>{
+    const head=q.q?`<div class="ct">${esc(q.q)}</div>`:'';
+    if(active)return `<div class="cq">${head}<div class="co">${q.opts.map((o,oi)=>btn(q,qi,o,oi)).join('')}</div></div>`;
+    const pk=pickOf(q,ans);
+    if(pk)return `<div class="cq">${head}<div class="co"><span class="cpick">${esc(pk.label)}</span></div></div>`;
+    return `<div class="cq">${head}<details class="cmore"><summary>선택지 ${q.opts.length}개 보기</summary><div class="co">${q.opts.map((o,oi)=>btn(q,qi,o,oi)).join('')}</div></details></div>`}).join('')
     +(active?'<div class="chint2">버튼을 누르거나 아래 입력창에 직접 답해도 됩니다</div>':'')+'</div>'}
 /* ---- 토큰 사용량: 이 대화 합계 + 전체 한도 대비(마지막으로 받은 값) ---- */
 let limits=null;
@@ -754,7 +779,7 @@ let queue=[],userStopped=false,ticking=false,lastSent='',lastModel='';
 let running=false,pending=null,pollTimer=null,lastVer=null,claudeOk=false,curMode='read',workDir=null,newCwd=null;
 const MODE_HINT={read:'파일 읽기·검색만 허용합니다. 수정이나 명령 실행은 거절됩니다.',edit:'파일 수정까지 허용합니다. 명령 실행은 거절됩니다.',all:'⚠ 모든 도구를 확인 없이 실행합니다. 내 PC 파일을 바꿀 수 있습니다.'};
 function setHint(){
-  if(!claudeOk){$('#chint').textContent='Claude Code가 설치돼 있어야 사용할 수 있습니다. 설치하고 로그인한 뒤 뷰어를 다시 열어 주십시오.';return}
+  if(!claudeOk){$('#chint').textContent='Claude Code가 설치돼 있어야 사용할 수 있습니다. 설치하고 로그인한 뒤 대화창을 다시 열어 주십시오.';return}
   const where=cur?workDir:newCwd;
   if(running){$('#chint').textContent='응답 중입니다. 지금 쓰는 메시지는 응답이 끝나면 자동으로 이어서 보냅니다 · 중지하면 입력창으로 돌아옵니다';$('#chint').style.cursor='';return}
   $('#chint').textContent=(where?'📁 '+where:!cur?'📁 기본 폴더(내 사용자 폴더) · 눌러서 바꾸기':'')+(where||!cur?'  ·  ':'')+MODE_HINT[curMode]+(lastModel?' · 최근 응답 모델: '+lastModel:'');
@@ -1015,7 +1040,7 @@ let chromeOn=false;
 function setChromeBtn(){const b=$('#bChrome');b.classList.toggle('on',chromeOn);b.textContent=chromeOn?'🌐 브라우저 켜짐':'🌐 브라우저 꺼짐'}
 $('#bChrome').onclick=async()=>{
   if(chromeOn){chromeOn=false;setChromeBtn();await api_().set_setting('chrome',false);return toast('브라우저 연결을 껐습니다')}
-  if(!await ask('내 Chrome을 Claude가 조작해도 되겠습니까?','켜면 Claude가 내 Chrome에서 페이지를 열고, 내용을 읽고, 클릭·입력까지 할 수 있습니다. 웹 개발 결과를 직접 보고 고치는 데 쓰입니다.\n\n  · 이미 로그인된 사이트에도 접근할 수 있고, 화면 내용은 Anthropic으로 전송됩니다\n  · "읽기만" 모드여도 브라우저 조작은 가능합니다\n  · Chrome에 Claude 확장 프로그램이 설치·연결돼 있어야 합니다\n\n필요할 때만 켜고 끝나면 꺼 주십시오. 뷰어를 다시 열면 꺼진 상태로 시작합니다.','켜기',true,'skip_chrome'))return;
+  if(!await ask('내 Chrome을 Claude가 조작해도 되겠습니까?','켜면 Claude가 내 Chrome에서 페이지를 열고, 내용을 읽고, 클릭·입력까지 할 수 있습니다. 웹 개발 결과를 직접 보고 고치는 데 쓰입니다.\n\n  · 이미 로그인된 사이트에도 접근할 수 있고, 화면 내용은 Anthropic으로 전송됩니다\n  · "읽기만" 모드여도 브라우저 조작은 가능합니다\n  · Chrome에 Claude 확장 프로그램이 설치·연결돼 있어야 합니다\n\n필요할 때만 켜고 끝나면 꺼 주십시오. 대화창을 다시 열면 꺼진 상태로 시작합니다.','켜기',true,'skip_chrome'))return;
   chromeOn=true;setChromeBtn();await api_().set_setting('chrome',true);toast('다음 메시지부터 Claude가 Chrome을 쓸 수 있습니다')};
 /* ---- 모델 선택 ---- */
 /* ---- 생각 깊이(effort) 선택 / 도움말 ---- */
@@ -1059,7 +1084,7 @@ $('#chat').addEventListener('click',async e=>{
 /* ---- 로그인 풀림 / 연결 끊김 알림 ---- */
 let alertKind=null,lastHealthAt=0;
 const PROBLEMS={
-  auth:{t:'로그인이 풀렸습니다',y:'터미널 열기',b:'Claude Code 로그인이 풀렸거나 만료됐습니다.\n\n다시 로그인하는 방법\n  1. 아래 "터미널 열기"를 누르면 Claude Code 창이 열립니다\n     (직접 열려면 Win+R → cmd → claude 입력)\n  2. 그 창에서  /login  을 입력하고 Enter\n  3. 브라우저에서 로그인을 마친 뒤 이 뷰어로 돌아와 다시 보내십시오\n\n보내려던 말은 입력창에 돌려놨습니다.'},
+  auth:{t:'로그인이 풀렸습니다',y:'터미널 열기',b:'Claude Code 로그인이 풀렸거나 만료됐습니다.\n\n다시 로그인하는 방법\n  1. 아래 "터미널 열기"를 누르면 Claude Code 창이 열립니다\n     (직접 열려면 Win+R → cmd → claude 입력)\n  2. 그 창에서  /login  을 입력하고 Enter\n  3. 브라우저에서 로그인을 마친 뒤 이 대화창으로 돌아와 다시 보내십시오\n\n보내려던 말은 입력창에 돌려놨습니다.'},
   net:{t:'인터넷에 연결되지 않았습니다',y:'다시 확인',b:'Anthropic 서버에 닿지 못했습니다.\n\n  · Wi-Fi나 랜선, 인터넷 연결을 확인하십시오\n  · VPN이나 회사·학교 네트워크에서 막고 있는지 확인하십시오\n  · 연결이 돌아오면 다시 보내면 됩니다\n\n보내려던 말은 입력창에 돌려놨습니다.'},
   limit:{t:'사용량 한도에 걸렸습니다',y:'확인',b:'지금은 Claude 사용 한도에 도달한 것 같습니다. 한도가 풀릴 때까지 기다렸다가 다시 보내 주십시오.\n(터미널의 Claude Code에서 /usage 를 입력하면 남은 양과 풀리는 시각을 볼 수 있습니다)'},
   busy:{t:'Claude 서버가 혼잡합니다',y:'확인',b:'서버가 바쁘거나 일시적으로 오류가 났습니다. 잠시 뒤에 다시 보내 보십시오.'}};
@@ -1104,7 +1129,7 @@ function askText(title,body,value){return new Promise(res=>{
   y.onclick=()=>done(inp.value);n.onclick=()=>done(null)})}
 async function renameSession(i){
   const s=sessions[i];if(!s)return;
-  const v=await askText('대화 이름 바꾸기','뷰어에서만 바뀝니다. 비워서 저장하면 원래 이름으로 돌아갑니다.',s.title);
+  const v=await askText('대화 이름 바꾸기','대화창에서만 바뀝니다. 비워서 저장하면 원래 이름으로 돌아갑니다.',s.title);
   if(v===null||v.trim()===s.title)return;
   const r=await api_().rename_session(s.path,v);if(!r.ok)return toast(r.error);
   if(cur===s.path)$('#title').firstChild.textContent=r.title;

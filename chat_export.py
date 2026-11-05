@@ -1,4 +1,4 @@
-"""Claude Code 대화 뷰어: pywebview 창에 ui.html을 띄우고 core의 파싱 결과를 JS에 넘긴다."""
+"""Claude Code 대화창: pywebview 창에 ui.html을 띄우고 core의 파싱 결과를 JS에 넘긴다."""
 import json
 import os
 import re
@@ -32,7 +32,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v5.5"
+TITLE = "Claude Code 대화창 v5.6"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -62,7 +62,7 @@ def close_splash():
 ICON = BASE / "app.ico"
 
 
-# 뷰어 입력창의 권한 단계. -p(화면 없는) 모드는 승인 질문을 못 하므로, 허용할 도구를 미리 정한다.
+# 대화창 입력창의 권한 단계. -p(화면 없는) 모드는 승인 질문을 못 하므로, 허용할 도구를 미리 정한다.
 MODE_ARGS = {
     "read": ["--permission-mode", "default", "--allowedTools", "Read,Grep,Glob"],
     "edit": ["--permission-mode", "acceptEdits", "--allowedTools", "Read,Grep,Glob,Edit,Write,MultiEdit,NotebookEdit"],
@@ -88,9 +88,9 @@ EFFORTS = [
 ]
 EFFORT_IDS = {e["id"] for e in EFFORTS}
 
-# -p 모드에는 선택창(AskUserQuestion)이 없다. 대신 이 형식의 블록을 답 끝에 붙이게 해서 뷰어가 버튼으로 바꿔 그린다.
+# -p 모드에는 선택창(AskUserQuestion)이 없다. 대신 이 형식의 블록을 답 끝에 붙이게 해서 대화창이 버튼으로 바꿔 그린다.
 CHOICES_PROMPT = (
-    "이 대화는 Claude Code 대화 뷰어에서 진행 중이며 AskUserQuestion 도구는 쓸 수 없다. "
+    "이 대화는 Claude Code 대화창에서 진행 중이며 AskUserQuestion 도구는 쓸 수 없다. "
     "사용자에게 여러 선택지 중 하나를 고르게 해야 하면, 답변 맨 끝에 아래 형식의 코드 블록을 정확히 한 개만 붙여라. "
     "블록 밖에는 질문 내용을 평소처럼 설명하고, 선택지는 2~6개의 짧은 문장으로 써라.\n"
     "```choices\n{\"question\": \"질문\", \"options\": [\"선택지1\", \"선택지2\"]}\n```\n"
@@ -109,7 +109,7 @@ def prompt_file_args():
         return []
 
 
-# 뷰어 입력창에서 쓸 수 없는 터미널 전용 단축어(-p 에서는 동작하지 않는 내장 명령)
+# 대화창 입력창에서 쓸 수 없는 터미널 전용 단축어(-p 에서는 동작하지 않는 내장 명령)
 BUILTIN_SLASH = {
     "advisor", "agents", "auto-mode-setup", "autocompact", "clear", "color", "compact", "config", "output-style",
     "context", "effort", "fast", "focus", "heapdump", "init", "mcp", "import", "model", "__remote-workflow",
@@ -266,7 +266,7 @@ def webview2_installed():
 def message_box(text, flags=0x40):
     if sys.platform == "win32":
         import ctypes
-        return ctypes.windll.user32.MessageBoxW(None, text, "Claude Code 대화 뷰어", flags | 0x10000)  # MB_SETFOREGROUND
+        return ctypes.windll.user32.MessageBoxW(None, text, "Claude Code 대화창", flags | 0x10000)  # MB_SETFOREGROUND
     print(text)
     return 0
 
@@ -416,7 +416,7 @@ SDK_MARK = re.compile(rb'"entrypoint"\s*:\s*"sdk-cli"')
 
 
 def unmark_sdk(path):
-    """뷰어(claude -p)가 쓴 대화 파일의 entrypoint 표시를 sdk-cli -> cli 로 바꿔, 터미널 Claude Code의 /resume 목록에도 보이게 한다.
+    """대화창(claude -p)가 쓴 대화 파일의 entrypoint 표시를 sdk-cli -> cli 로 바꿔, 터미널 Claude Code의 /resume 목록에도 보이게 한다.
     Claude Code는 파일 앞부분의 entrypoint가 sdk-*이면 SDK 대화로 보고 목록에서 뺀다.
     안전장치: 읽은 뒤 파일이 바뀌었으면 건드리지 않고, 바뀐 줄이 모두 올바른 JSON일 때만 임시 파일을 거쳐 통째로 교체한다. 바꿨으면 True."""
     try:
@@ -490,7 +490,7 @@ def custom_titles():
 
 
 def session_info(path):
-    """(제목, 시각). 뷰어에서 바꾼 이름이 있으면 그것을 우선한다."""
+    """(제목, 시각). 대화창에서 바꾼 이름이 있으면 그것을 우선한다."""
     title, ts = core.session_info(path)
     return custom_titles().get(Path(path).stem) or title, ts
 
@@ -597,7 +597,7 @@ class Api:
         blocks = []
         for role, ts, parts in self._cur["msgs"]:
             text = "\n\n".join(x.strip() for k, x in parts if k == "text" and x.strip())
-            text = re.sub(r"```choices[\s\S]*?```", "", text).strip()   # 뷰어가 버튼으로 그리는 선택 블록은 복사에서 뺀다
+            text = re.sub(r"```choices[\s\S]*?```", "", text).strip()   # 대화창이 버튼으로 그리는 선택 블록은 복사에서 뺀다
             if text:
                 blocks.append(f"[{'나' if role == 'user' else 'Claude'}]  {ts}\n{text}")
         if not blocks:
@@ -756,7 +756,7 @@ class Api:
         return save_setting(key, val)
 
     def rename_session(self, path, title):
-        """대화 이름을 바꾼다. 대화 파일은 그대로 두고 뷰어 설정에만 저장한다(빈 이름이면 원래 이름으로 되돌림)."""
+        """대화 이름을 바꾼다. 대화 파일은 그대로 두고 대화창 설정에만 저장한다(빈 이름이면 원래 이름으로 되돌림)."""
         try:
             p = Path(path).resolve()
             if p.suffix != ".jsonl" or core.PROJECTS.resolve() not in p.parents:
@@ -808,7 +808,7 @@ class Api:
             return None
 
     def session_state(self, path):
-        """세션 파일의 마지막 수정 후 경과 초와 버전. 뷰어가 마지막으로 본 버전과 다르고 방금 바뀌었다면 다른 곳에서 쓰는 중일 수 있다."""
+        """세션 파일의 마지막 수정 후 경과 초와 버전. 대화창이 마지막으로 본 버전과 다르고 방금 바뀌었다면 다른 곳에서 쓰는 중일 수 있다."""
         v = self._ver(path)
         return {"ver": v, "idle": (time.time() - v[0] / 1e9) if v else None}
 

@@ -282,7 +282,7 @@ def to_html(data, title, sid=""):
         B.append("</table>")
     else:
         B.append("<p class='note'>기록이 없습니다.</p>")
-    B.append(f'<footer>Claude Code 대화 뷰어로 내보냄 · {datetime.now():%Y-%m-%d %H:%M}</footer>')
+    B.append(f'<footer>Claude Code 대화창로 내보냄 · {datetime.now():%Y-%m-%d %H:%M}</footer>')
     return (f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" '
             f'content="width=device-width,initial-scale=1"><title>{_e(title)}</title><style>{CSS}</style></head>'
             f'<body><div class="wrap">{"".join(B)}</div><script>{JS}</script></body></html>')
