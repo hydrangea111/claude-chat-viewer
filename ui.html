@@ -26,7 +26,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* sidebar */
 aside{width:var(--sw,316px);background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-aside>*{min-width:240px}
+aside>*{min-width:220px}
+aside>.search{min-width:0}
+body.sbnarrow .ver{display:none}
 body.collapsed aside{border-right:0}
 body:not(.dragging) aside{transition:width .16s ease}
 #rz{width:7px;margin:0 -4px 0 -3px;cursor:col-resize;z-index:6;flex-shrink:0;position:relative;touch-action:none}
@@ -40,7 +42,9 @@ body.dragging{cursor:col-resize;user-select:none}
 body.collapsed #sbOpen{display:grid}
 body.collapsed header{padding-left:56px}
 .brand{padding:20px 20px 12px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.2px}
-.ver{margin-left:auto;font-size:11px;font-weight:600;color:var(--dim);background:var(--chip);border-radius:20px;padding:1px 8px}
+.brand .bn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand .logo,.brand .sbtn{flex-shrink:0}
+.ver{flex-shrink:0;margin-left:auto;font-size:11px;font-weight:600;color:var(--dim);background:var(--chip);border-radius:20px;padding:1px 8px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e9a46f);display:grid;place-items:center;color:#fff;font-size:14px}
 .search{margin:0 16px 10px;position:relative}
 .search input{width:100%;padding:9px 12px 9px 34px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;outline:none}
@@ -345,7 +349,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -790,6 +794,7 @@ async function tick(){
     if(p.path&&!cur){cur=p.path;curInfo={path:p.path,title:'새 대화',date:''}}
     if(p.path&&cur===p.path&&p.ver&&(!lastVer||p.ver[0]!==lastVer[0]||p.ver[1]!==lastVer[1])){lastVer=p.ver;await refresh()}
     if(p.running)return;
+    if(userStopped)p.error=null;          // 내가 중지한 것은 오류가 아니다 (프로세스를 강제로 끝내면 종료 코드가 남는다)
     clearInterval(pollTimer);running=false;pending=null;setRunning(false);
     if(cur===p.path||(!cur&&p.path)){await refresh();['files','cmds','others'].forEach(renderSplit);if(ttsOn&&!p.error&&!userStopped)speakLast()}
     await loadSessions();const s=sessions.find(x=>x.path===cur);if(s){curInfo=s;$('#title').firstChild.textContent=s.title}
@@ -801,9 +806,9 @@ async function tick(){
         if((p.kind==='auth'||p.kind==='net')&&lastSent&&!$('#msg').value){$('#msg').value=lastSent;autosize()}   // 못 보낸 말은 입력창에 돌려놓는다
         checkHealth(true);problem(p.kind,p.error)
       }else toast('오류: '+p.error)}
-    // 대기열: 정상 종료면 다음 메시지를 자동으로 보내고, 중지했거나 오류면 입력창으로 되돌려 잃어버리지 않게 한다
+    // 대기열: 정상 종료거나 내가 중지한 경우에는 다음 예약 메시지를 바로 보내고, 오류면 입력창으로 되돌려 잃어버리지 않게 한다
     if(queue.length){
-      if(p.error||userStopped)restoreQueue(userStopped?'중지해서 예약한 메시지를 입력창으로 돌려놨습니다':'오류가 나서 예약한 메시지를 입력창으로 돌려놨습니다');
+      if(p.error)restoreQueue('오류가 나서 예약한 메시지를 입력창으로 돌려놨습니다');
       else{const it=queue.shift();if(!await dispatch(it.text,it.files)){queue.unshift(it);restoreQueue('예약한 메시지를 보내지 못해 입력창으로 돌려놨습니다')}}
     }
     userStopped=false;
@@ -1160,7 +1165,7 @@ $('#chat').addEventListener('click',async e=>{
 const SB_MIN=220,SB_MAX=560,SB_SNAP=110;let sbW=316,sbLast=316;
 function setSb(w,save){
   w=Math.round(w);sbW=w;if(w>0)sbLast=w;
-  document.documentElement.style.setProperty('--sw',w+'px');document.body.classList.toggle('collapsed',w===0);
+  document.documentElement.style.setProperty('--sw',w+'px');document.body.classList.toggle('collapsed',w===0);document.body.classList.toggle('sbnarrow',w>0&&w<270);
   if(save)try{api_().set_setting('sidebar',w)}catch(e){}}
 const sbFromX=x=>x<SB_SNAP?0:Math.max(SB_MIN,Math.min(SB_MAX,x));
 $('#rz').addEventListener('pointerdown',e=>{
@@ -1181,7 +1186,7 @@ $('#updClose').onclick=async()=>{$('#updbar').hidden=true;if(updLatest)await api
 const bootDone=()=>{$('#boot').hidden=true};
 setTimeout(bootDone,25000);                                  // 어떤 이유로든 안내 화면이 계속 남지 않게 한다
 window.addEventListener('pywebviewready',async()=>{
-  try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w,false)}catch(e){}
+  try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w>0&&w<SB_MIN?SB_MIN:w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
   try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();chromeOn=(await api_().get_setting('chrome'))===true;setChromeBtn();{const sm2=await api_().get_setting('mode');if(['read','edit','all'].includes(sm2)){curMode=sm2;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x.dataset.m===sm2));setHint()}}efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
   try{ttsOn=(await api_().get_setting('tts'))===true;setTtsBtn();voiceAuto=(await api_().get_setting('voice_auto'))!==false;updMic()}catch(e){}
