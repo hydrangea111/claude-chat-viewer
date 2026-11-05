@@ -11,6 +11,7 @@ import urllib.request
 import threading
 import time
 import uuid
+import platform
 import webbrowser
 from pathlib import Path
 
@@ -31,10 +32,15 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화 뷰어 v5.2"
+TITLE = "Claude Code 대화 뷰어 v5.3"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
+
+
+# 개발자에게 문의하기: 개발자의 Firebase(Firestore)에 글 한 건을 남긴다. 규칙상 새 글 작성만 되고, 읽기·수정·삭제는 개발자만 가능하다.
+INQUIRY_URL = "https://firestore.googleapis.com/v1/projects/dh-link-hub/databases/(default)/documents/viewerInquiries"
+INQUIRY_KEY = "AIzaSyDVKxVqqmvO4eZa00sLaAxzMvkfqfBlWn4"   # 웹용 공개 키(비밀이 아님). 접근 제어는 Firestore 규칙이 한다
 
 
 def vtuple(v):
@@ -719,6 +725,29 @@ class Api:
             return voice.transcribe(base64.b64decode(b64))
         except Exception as e:
             return {"ok": False, "error": str(e)[:200]}
+
+    def send_inquiry(self, message, contact=""):
+        """문의 글을 개발자 서버로 보낸다. 보내는 것은 글·연락처(선택)·프로그램 버전·Windows 버전뿐이다."""
+        message, contact = (message or "").strip(), (contact or "").strip()
+        if not message:
+            return {"ok": False, "error": "내용을 입력해 주십시오"}
+        if len(message) > 3000:
+            return {"ok": False, "error": "내용은 3000자까지 보낼 수 있습니다"}
+        now = time.time()
+        if now - getattr(self, "_last_inquiry", 0) < 20:
+            return {"ok": False, "error": "방금 보냈습니다. 잠시 뒤에 다시 보내 주십시오"}
+        fields = {"message": message, "version": APP_VERSION, "os": platform.platform()[:100]}
+        if contact:
+            fields["contact"] = contact[:200]
+        body = json.dumps({"fields": {k: {"stringValue": v} for k, v in fields.items()}}).encode("utf-8")
+        req = urllib.request.Request(INQUIRY_URL + "?key=" + INQUIRY_KEY, data=body,
+                                     headers={"Content-Type": "application/json", "User-Agent": "ClaudeChatViewer/" + APP_VERSION})
+        try:
+            urllib.request.urlopen(req, timeout=15).read()
+        except Exception as e:
+            return {"ok": False, "error": "보내지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주십시오 (" + str(e)[:60] + ")"}
+        self._last_inquiry = now
+        return {"ok": True}
 
     def get_setting(self, key):
         return read_settings().get(key)

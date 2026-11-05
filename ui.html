@@ -254,6 +254,11 @@ section.on{display:flex}
 .help a{color:var(--accent);text-underline-offset:2px}
 .help .tip{background:var(--chip);border-radius:12px;padding:12px 16px;margin:10px 0;font-size:14px;line-height:1.7;color:var(--dim)}
 .help pre.lic{white-space:pre-wrap;background:var(--chip);border-radius:12px;padding:14px 16px;font:12.5px/1.65 Consolas,"Cascadia Mono",monospace;color:var(--dim);margin:8px 0 12px;overflow-wrap:anywhere}
+.help #hp-ask textarea,.help #hp-ask input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font:inherit;font-size:14px;line-height:1.6;padding:10px 12px;resize:vertical;margin:6px 0}
+.help #hp-ask textarea:focus,.help #hp-ask input[type=text]:focus{outline:none;border-color:var(--accent)}
+.help .inqcnt{text-align:right;font-size:11.5px;color:var(--dim);margin:-2px 2px 6px}
+.help .inqrow{display:flex;align-items:center;gap:12px;margin:10px 0 6px}
+#inqStat{font-size:13px;color:var(--dim)}#inqStat.ok{color:var(--accent)}#inqStat.err{color:var(--err)}
 .help .hfoot{display:flex;justify-content:flex-end;padding:12px 24px 16px;border-top:1px solid var(--line)}
 @media(max-width:640px){.help .steps{grid-template-columns:1fr}}
 .mrow{display:flex;align-items:center;gap:8px;position:relative}
@@ -324,7 +329,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.2</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.3</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -398,7 +403,7 @@ details.work[open] summary{margin-bottom:8px}
 <div id="ctx" hidden></div>
 <div class="modal" id="helpModal" hidden><div class="mbox help" role="dialog" aria-modal="true" aria-label="도움말">
   <div class="hhead"><h3>도움말</h3><button class="hx" id="helpX" aria-label="닫기" title="닫기">✕</button></div>
-  <div class="htabs" role="tablist"><button class="on" data-p="cmd">단축어</button><button data-p="err">문제 해결</button><button data-p="set">설정 안내</button><button data-p="lic">라이선스</button></div>
+  <div class="htabs" role="tablist"><button class="on" data-p="cmd">단축어</button><button data-p="err">문제 해결</button><button data-p="set">설정 안내</button><button data-p="ask">문의하기</button><button data-p="lic">라이선스</button></div>
   <div class="hbody">
   <section class="hp on" id="hp-cmd">
     <h4>단축어(/) 쓰는 법</h4>
@@ -467,6 +472,16 @@ details.work[open] summary{margin-bottom:8px}
     <p><b>💬 대화 모드</b>를 켜면 말풍선이 커지고, 파일 읽기·명령 같은 도구 작업은 "작업 N개 보기" 한 줄로 접힙니다. 입력창 위에는 듣는 중 · 생각하는 중 · 말하는 중을 보여 주는 표시가 나옵니다. 🎙 음성 대화와 🔊 읽어 주기와 함께 쓰면 말로 주고받기 편합니다.</p>
     <h4>토큰·한도 줄</h4>
     <p><b>토큰</b> 줄은 이 대화에서 쓴 양입니다. <b>한도</b> 줄은 계정 전체의 사용률이고, 마지막 응답을 받은 시점의 값이라 대화하지 않는 동안에는 갱신되지 않습니다. 80% 이상이면 빨갛게 보입니다. 한도 줄에 마우스를 올리면 초기화 시각이 나오고, 그 시각이 지나면 자동으로 0%로 바뀝니다.</p>
+  </section>
+  <section class="hp" id="hp-ask">
+    <h4>개발자에게 문의하기</h4>
+    <p>불편한 점, 오류, 바라는 기능을 적어 보내 주십시오. 개발자가 읽고 개선에 참고합니다.</p>
+    <textarea id="inqMsg" rows="4" maxlength="3000" placeholder="예: 이런 상황에서 이런 오류가 났습니다 / 이런 기능이 있으면 좋겠습니다"></textarea>
+    <div class="inqcnt"><span id="inqCnt">0 / 3000</span></div>
+    <input type="text" id="inqContact" maxlength="200" placeholder="답장을 받을 연락처 (선택) · 이메일 등">
+    <div class="tip"><b>보내는 내용</b><br>위에 적은 글, 연락처(적은 경우), 프로그램 버전, Windows 버전만 보냅니다. 대화 내용과 파일 경로는 보내지 않습니다. 글은 개발자만 읽을 수 있는 서버에 저장되며, 답장은 연락처를 적은 경우에만 드릴 수 있습니다.</div>
+    <div class="inqrow"><button class="btn primary" id="inqSend">보내기</button><span id="inqStat"></span></div>
+    <p>서버로 보내기 어려운 상황이면 <a href="https://github.com/hydrangea111/claude-chat-viewer/issues/new" target="_blank" rel="noopener">GitHub에 글 남기기</a>도 쓸 수 있습니다.</p>
   </section>
   <section class="hp" id="hp-lic">
     <h4>이 프로그램</h4>
@@ -974,6 +989,15 @@ $('#bEffort').onclick=ev=>{ev.stopPropagation();const mm=$('#mmenu');if(!mm.hidd
 function helpTab(p){document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#helpModal .hp').forEach(x=>x.classList.toggle('on',x.id==='hp-'+p));$('#helpModal .hbody').scrollTop=0}
 document.querySelectorAll('#helpModal .htabs button').forEach(b=>b.onclick=()=>helpTab(b.dataset.p));
 $('#bHelp').onclick=async()=>{helpTab('cmd');try{$('#updChk').checked=(await api_().get_setting('update_check'))!==false;$('#voiceChk').checked=voiceAuto}catch(e){}$('#helpModal').hidden=false};
+$('#inqMsg').oninput=()=>{$('#inqCnt').textContent=$('#inqMsg').value.length+' / 3000';$('#inqStat').textContent=''};
+$('#inqSend').onclick=async()=>{
+  const b=$('#inqSend'),st=$('#inqStat'),m=$('#inqMsg').value.trim();
+  if(!m){st.className='err';st.textContent='내용을 입력해 주십시오';$('#inqMsg').focus();return}
+  b.disabled=true;st.className='';st.textContent='보내는 중…';
+  let r;try{r=await api_().send_inquiry(m,$('#inqContact').value)}catch(e){r={ok:false,error:String(e)}}
+  b.disabled=false;
+  if(r.ok){$('#inqMsg').value='';$('#inqCnt').textContent='0 / 3000';st.className='ok';st.textContent='보냈습니다. 감사합니다';toast('문의를 보냈습니다')}
+  else{st.className='err';st.textContent=r.error||'보내지 못했습니다'}};   // 실패해도 쓴 글은 그대로 남긴다
 $('#voiceChk').onchange=async e=>{voiceAuto=e.target.checked;await api_().set_setting('voice_auto',voiceAuto);toast(voiceAuto?'말을 인식하면 바로 보냅니다':'말을 인식하면 입력창에만 넣습니다')};
 $('#updChk').onchange=async e=>{await api_().set_setting('update_check',e.target.checked);toast(e.target.checked?'시작할 때 새 버전을 확인합니다':'새 버전 확인을 껐습니다')};
 $('#helpClose').onclick=()=>{$('#helpModal').hidden=true};$('#helpX').onclick=()=>{$('#helpModal').hidden=true};
