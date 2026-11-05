@@ -345,7 +345,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.4</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div>Claude Code 대화<span class="ver">v5.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -727,6 +727,8 @@ $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
   document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));
   $('#jump').classList.toggle('on',b.dataset.t==='chat');$('#composer').style.display=b.dataset.t==='chat'?'':'none'};
 $('#jump').classList.add('on');
+/* 위·아래 이동 버튼이 입력창 위를 가리지 않도록, 입력창 높이에 맞춰 그 위쪽에 둔다 */
+new ResizeObserver(()=>{$('#jump').style.bottom=($('#composer').offsetHeight+12)+'px'}).observe($('#composer'));
 $('#bTop').onclick=()=>$('#chat').scrollTo({top:0,behavior:'smooth'});
 $('#bBottom').onclick=()=>$('#chat').scrollTo({top:$('#chat').scrollHeight,behavior:'smooth'});
 const need=fn=>async()=>{if(!data)return toast('대화를 먼저 선택하십시오');fn()};
