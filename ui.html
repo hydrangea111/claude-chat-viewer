@@ -117,7 +117,11 @@ section.on{display:flex}
 .ts{font-size:11px;color:var(--dim);margin-top:5px}
 .bubble code{background:var(--code);padding:1px 6px;border-radius:5px;font:12.5px Consolas,monospace;color:inherit}
 .msg.user .bubble code{background:rgba(255,255,255,.2)}
-.bubble pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow:auto;margin:8px 0 2px;font:12.5px/1.55 Consolas,monospace;white-space:pre;color:var(--text)}
+.codebox{position:relative;margin:8px 0 2px}
+.codebox .cpcode{position:absolute;top:6px;right:8px;z-index:1;border:1px solid var(--line);background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;padding:1px 9px;border-radius:8px;cursor:pointer;opacity:.75}
+.codebox:hover .cpcode{opacity:1}.codebox .cpcode:hover{color:var(--accent);border-color:var(--accent)}
+.bubble .codebox pre{padding-right:64px}
+.bubble pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow:auto;margin:0;font:12.5px/1.55 Consolas,monospace;white-space:pre;color:var(--text)}
 .bubble pre code{background:none;padding:0}
 .bubble b{font-weight:700}
 .chip{background:var(--chip);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:12.5px;max-width:100%}
@@ -567,9 +571,9 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clea
 // 간단 마크다운: ``` 코드블록, `인라인`, **굵게**
 function md(s){
   return s.split(/```/).map((seg,i)=>{
-    if(i%2){const nl=seg.indexOf('\n');return '<pre><code>'+esc(nl>=0&&nl<20?seg.slice(nl+1):seg)+'</code></pre>'}
+    if(i%2){const nl=seg.indexOf('\n');return '<div class="codebox"><button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button><pre><code>'+esc(nl>=0&&nl<20?seg.slice(nl+1):seg)+'</code></pre></div>'}
     return esc(seg).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
-  }).join('').replace(/<\/pre>\n/g,'</pre>');
+  }).join('').replace(/<\/pre><\/div>\n/g,'</pre></div>');
 }
 
 /* ---- 세션 목록 ---- */
@@ -719,6 +723,8 @@ function renderChat(live){
   el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
 }
 $('#chat').onclick=async e=>{
+  const cpb=e.target.closest('.cpcode');
+  if(cpb){const code=cpb.parentElement.querySelector('pre');if(await copyText(code?code.textContent:'')){cpb.textContent='복사됨';setTimeout(()=>{cpb.textContent='복사'},1200)}else toast('복사하지 못했습니다');return}
   const fb=e.target.closest('.foldbtn');
   if(fb){const b=fb.closest('.bubble');b.classList.toggle('open');fb.textContent=b.classList.contains('open')?'접기':'펼치기';return}
   const h=e.target.closest('.chip>.h');if(!h)return;
