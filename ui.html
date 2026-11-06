@@ -581,11 +581,16 @@ const api_=()=>window.pywebview.api;
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2600)}
 
-// 간단 마크다운: ``` 코드블록, `인라인`, **굵게**
+// 간단 마크다운: 줄 맨 앞의 ``` 코드블록, `인라인`, **굵게**. 글 중간에 낀 ``` 는 코드블록이 아니다
+const CODE_LANGS=new Set('py python c cpp c++ cc h hpp cs csharp java kotlin kt js javascript ts typescript tsx jsx go rust rs rb ruby php swift lua r sql sh bash shell bat cmd powershell ps1 json yaml yml toml ini xml css csv diff'.split(' '));
+function mdSplit(s){
+  const out=[],re=/(^|\n)[ \t]*```([^\n`]*)\n([\s\S]*?)(?:\n[ \t]*```[ \t]*(?=\n|$)|$)/g;let last=0,m;
+  while((m=re.exec(s))){const st=m.index+m[1].length;if(st>last)out.push({t:s.slice(last,st)});out.push({code:1,lang:m[2].trim().split(/\s+/)[0].toLowerCase(),t:m[3]});last=re.lastIndex}
+  if(last<s.length)out.push({t:s.slice(last)});return out}
 function md(s){
-  return s.split(/```/).map((seg,i)=>{
-    if(i%2){const nl=seg.indexOf('\n'),lg=nl>=0&&nl<20?seg.slice(0,nl).trim().toLowerCase():'';const pv=['html','htm','svg','md','markdown'].includes(lg);return '<div class="codebox"><span class="cpbar">'+(pv?'<button class="pvcode" type="button" data-lang="'+lg+'" title="이 코드를 화면으로 미리 봅니다">미리보기</button>':'')+'<button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button></span><pre><code>'+esc(nl>=0&&nl<20?seg.slice(nl+1):seg)+'</code></pre></div>'}
-    return esc(seg).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
+  return mdSplit(s).map(g=>{
+    if(g.code){const lg=g.lang,pv=['html','htm','svg','md','markdown'].includes(lg),big=!pv&&CODE_LANGS.has(lg);return '<div class="codebox"><span class="cpbar">'+(big?'<button class="pvcode" type="button" data-lang="'+lg+'" title="줄 번호와 함께 크게 봅니다">크게 보기</button>':'')+(pv?'<button class="pvcode" type="button" data-lang="'+lg+'" title="이 코드를 화면으로 미리 봅니다">미리보기</button>':'')+'<button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button></span><pre><code>'+esc(g.t)+'</code></pre></div>'}
+    return esc(g.t).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
   }).join('').replace(/<\/pre><\/div>\n/g,'</pre></div>');
 }
 
@@ -786,7 +791,7 @@ async function pick(k,i){
     const f=async folder=>{if(!await api_().open_path(i,folder))toast('현재 이 경로에 파일이 없습니다')};
     $('#bFolder').onclick=()=>f(true);$('#bFile').onclick=()=>f(false);
     $('#bPrev').onclick=async()=>{const r2=await api_().preview_file(i);if(!r2||!r2.ok)return toast((r2&&r2.error)||'미리볼 수 없습니다');
-      const note=(r2.kind==='html'?PV_NOTE+' ':'')+(r2.truncated?'파일이 커서 앞부분만 보여 줍니다. ':'');
+      const note=(r2.kind==='html'?PV_NOTE+' ':'')+(r2.lang?r2.lang+(r2.lang.indexOf('글자만')>=0?'. ':' 파일입니다. '):'')+(r2.truncated?'파일이 커서 앞부분만 보여 줍니다. ':'');
       openPv(r2.name,pvBody(r2),note.trim())};
   }
 }
@@ -796,21 +801,24 @@ async function pick(k,i){
 const PV_CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:\">";
 const escA=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
 function pvHtml(code){return '<iframe sandbox="allow-scripts" srcdoc="'+escA(PV_CSP+code)+'"></iframe>'}
+let pvBlob=null;
 function pvBody(r){
   if(r.kind==='image')return '<div class="pvimg"><img alt="" src="'+escA(r.src)+'"></div>';
+  if(r.kind==='pdf'){const bin=atob(r.b64),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);if(pvBlob)URL.revokeObjectURL(pvBlob);pvBlob=URL.createObjectURL(new Blob([u8],{type:'application/pdf'}));return '<iframe src="'+pvBlob+'"></iframe>'}
   if(r.kind==='html')return pvHtml(r.text);
   if(r.kind==='md')return '<div class="pvmd">'+md(r.text)+'</div>';
   return '<div class="code">'+r.text.split(String.fromCharCode(13)).join('').split(String.fromCharCode(10)).map((l,i)=>'<div><span class="ln">'+(i+1)+'</span>'+(esc(l)||' ')+'</div>').join('')+'</div>'}
 function openPv(title,bodyHtml,note){
   $('#pvT').textContent=title;$('#pvC').innerHTML=bodyHtml;
   const n=$('#pvN');n.textContent=note||'';n.hidden=!note;$('#pvm').hidden=false;$('#pvC').scrollTop=0}
-function closePv(){$('#pvm').hidden=true;$('#pvC').innerHTML=''}
+function closePv(){$('#pvm').hidden=true;$('#pvC').innerHTML='';if(pvBlob){URL.revokeObjectURL(pvBlob);pvBlob=null}}
 $('#pvX').onclick=closePv;$('#pvm').addEventListener('mousedown',e=>{if(e.target.id==='pvm')closePv()});
 const PV_NOTE='미리보기 안에서는 인터넷에 접속하지 않고, 같은 폴더의 다른 파일도 불러오지 않습니다. 실제와 다르게 보일 수 있습니다.';
 function previewCode(lang,code){
   if(lang==='svg')return openPv('SVG 미리보기','<div class="pvimg"><img alt="" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(code)+'"></div>');
   if(lang==='md'||lang==='markdown')return openPv('마크다운 미리보기','<div class="pvmd">'+md(code)+'</div>');
-  openPv('HTML 미리보기',pvHtml(code),PV_NOTE)}
+  if(lang==='html'||lang==='htm')return openPv('HTML 미리보기',pvHtml(code),PV_NOTE);
+  openPv(lang+' 코드',pvBody({kind:'text',text:code}))}
 
 /* ---- 상단 ---- */
 $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;

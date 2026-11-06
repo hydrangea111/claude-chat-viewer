@@ -178,20 +178,27 @@ def _e(s):
     return html.escape(str(s))
 
 
+_FENCE = re.compile(r"(^|\n)[ \t]*```([^\n`]*)\n([\s\S]*?)(?:\n[ \t]*```[ \t]*(?=\n|$)|$)")
+
+
 def _md(s):
-    """코드블록, `인라인`, **굵게**, # 제목 만 지원하는 가벼운 마크다운."""
-    out = []
-    for i, seg in enumerate(s.split("```")):
-        if i % 2:
-            nl = seg.find("\n")
-            body = seg[nl + 1:] if 0 <= nl < 20 else seg
-            out.append(f"<pre><code>{_e(body)}</code></pre>")
-            continue
+    """줄 맨 앞의 코드블록, `인라인`, **굵게**, # 제목 만 지원하는 가벼운 마크다운. 글 중간의 ``` 는 코드블록으로 보지 않는다."""
+    out, last = [], 0
+
+    def plain(seg):
         seg = _e(seg)
         seg = re.sub(r"`([^`\n]+)`", r"<code>\1</code>", seg)
         seg = re.sub(r"\*\*([^*\n]+)\*\*", r"<b>\1</b>", seg)
-        seg = re.sub(r"(?m)^#{1,4} (.+)$", r"<b>\1</b>", seg)
-        out.append(seg)
+        return re.sub(r"(?m)^#{1,4} (.+)$", r"<b>\1</b>", seg)
+
+    for m in _FENCE.finditer(s):
+        st = m.start() + len(m.group(1))
+        if st > last:
+            out.append(plain(s[last:st]))
+        out.append(f"<pre><code>{_e(m.group(3))}</code></pre>")
+        last = m.end()
+    if last < len(s):
+        out.append(plain(s[last:]))
     return re.sub(r"</pre>\n", "</pre>", "".join(out))
 
 

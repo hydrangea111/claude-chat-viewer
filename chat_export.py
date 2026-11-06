@@ -1,6 +1,8 @@
 """Claude Code 대화창: pywebview 창에 ui.html을 띄우고 core의 파싱 결과를 JS에 넘긴다."""
 import base64
 import json
+import zipfile
+import xml.etree.ElementTree as ET
 import os
 import re
 import subprocess
@@ -496,6 +498,143 @@ def session_info(path):
     return custom_titles().get(Path(path).stem) or title, ts
 
 
+OFFICE_KINDS = {".docx": "Word 문서", ".pptx": "파워포인트", ".xlsx": "엑셀", ".hwpx": "한글(hwpx)"}
+OLD_OFFICE = {".doc", ".ppt", ".xls", ".hwp"}
+
+
+def _ln(el):
+    return el.tag.rsplit("}", 1)[-1]
+
+
+def _xml(z, name):
+    zi = z.getinfo(name)
+    if zi.file_size > 40 * 1024 * 1024:
+        raise ValueError("안의 파일이 너무 큽니다")
+    return ET.fromstring(z.read(name))
+
+
+def _runs(el):
+    """문단 하나의 글자: t 는 글자, tab/br 은 공백·줄바꿈."""
+    out = []
+    for x in el.iter():
+        n = _ln(x)
+        if n == "t":
+            out.append(x.text or "")
+        elif n == "tab":
+            out.append("\t")
+        elif n in ("br", "lineBreak"):
+            out.append("\n")
+    return "".join(out)
+
+
+def _paras(root, para, cell="tc", row="tr", table="tbl"):
+    """문서 순서대로 문단과 표(칸은 ' | ' 로 구분)를 줄로 만든다."""
+    lines = []
+
+    def walk(el):
+        for ch in el:
+            n = _ln(ch)
+            if n == para:
+                lines.append(_runs(ch))
+            elif n == table:
+                for r in ch.iter():
+                    if _ln(r) == row:
+                        lines.append(" | ".join(_runs(c).replace("\n", " ") for c in r if _ln(c) == cell))
+                lines.append("")
+            else:
+                walk(ch)
+    walk(root)
+    return lines
+
+
+def _col(ref):
+    n = 0
+    for c in ref:
+        if not c.isalpha():
+            break
+        n = n * 26 + ord(c.upper()) - 64
+    return max(n - 1, 0)
+
+
+def _xlsx(z):
+    names = z.namelist()
+    shared = []
+    if "xl/sharedStrings.xml" in names:
+        for si in _xml(z, "xl/sharedStrings.xml"):
+            shared.append(_runs(si))
+    sheets = []
+    if "xl/workbook.xml" in names and "xl/_rels/workbook.xml.rels" in names:
+        rels = {r.get("Id"): r.get("Target") for r in _xml(z, "xl/_rels/workbook.xml.rels")}
+        wb = _xml(z, "xl/workbook.xml")
+        for sh in wb.iter():
+            if _ln(sh) == "sheet":
+                rid = [v for k, v in sh.attrib.items() if k.endswith("}id")]
+                t = rels.get(rid[0]) if rid else None
+                if t:
+                    t = t.lstrip("/")
+                    sheets.append((sh.get("name", ""), t if t.startswith("xl/") else "xl/" + t))
+    if not sheets:
+        sheets = [("시트", n) for n in sorted(names) if n.startswith("xl/worksheets/sheet") and n.endswith(".xml")]
+    lines = []
+    for name, part in sheets:
+        if part not in names:
+            continue
+        lines.append("══ 시트: " + name + " ══")
+        rows = 0
+        for row in _xml(z, part).iter():
+            if _ln(row) != "row":
+                continue
+            cells = {}
+            for c in row:
+                if _ln(c) != "c":
+                    continue
+                v = ""
+                kind = c.get("t")
+                for ch in c:
+                    if _ln(ch) == "v":
+                        v = ch.text or ""
+                    elif _ln(ch) == "is":
+                        v = _runs(ch)
+                if kind == "s" and v.isdigit() and int(v) < len(shared):
+                    v = shared[int(v)]
+                cells[_col(c.get("r", "A"))] = v.replace("\n", " ")
+            if cells:
+                lines.append("\t".join(cells.get(i, "") for i in range(max(cells) + 1)))
+                rows += 1
+                if rows >= 3000:
+                    lines.append("(3000줄까지만 보여 줍니다)")
+                    break
+        lines.append("")
+    return lines
+
+
+def office_text(p, ext):
+    """docx·pptx·xlsx·hwpx 에서 글자만 뽑는다. 서식과 그림은 빼고, 파일은 읽기만 한다."""
+    with zipfile.ZipFile(p) as z:
+        names = z.namelist()
+        if ext == ".docx":
+            return _paras(_xml(z, "word/document.xml"), "p")
+        if ext == ".pptx":
+            sl = sorted((n for n in names if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)),
+                        key=lambda n: int(re.findall(r"\d+", n)[-1]))
+            out = []
+            for i, n in enumerate(sl, 1):
+                out.append("══ 슬라이드 %d ══" % i)
+                out += [x for x in _paras(_xml(z, n), "p") if x.strip()]
+                out.append("")
+            return out
+        if ext == ".xlsx":
+            return _xlsx(z)
+        sec = sorted(n for n in names if re.fullmatch(r"Contents/section\d+\.xml", n))
+        out = []
+        for n in sec:
+            out += _paras(_xml(z, n), "p")
+        return out
+
+
+PV_LANGS = {'.py': 'Python', '.pyw': 'Python', '.c': 'C', '.h': 'C/C++ 헤더', '.cpp': 'C++', '.cc': 'C++', '.cxx': 'C++', '.hpp': 'C++ 헤더', '.cs': 'C#', '.java': 'Java', '.kt': 'Kotlin', '.js': 'JavaScript', '.mjs': 'JavaScript', '.ts': 'TypeScript', '.tsx': 'TSX', '.jsx': 'JSX', '.go': 'Go', '.rs': 'Rust', '.rb': 'Ruby', '.php': 'PHP', '.swift': 'Swift', '.lua': 'Lua', '.r': 'R', '.sql': 'SQL', '.sh': '셸', '.bat': '배치', '.cmd': '배치', '.ps1': 'PowerShell', '.json': 'JSON', '.yaml': 'YAML', '.yml': 'YAML', '.toml': 'TOML', '.ini': 'INI', '.xml': 'XML', '.css': 'CSS', '.csv': 'CSV', '.tsv': 'TSV', '.log': '로그', '.txt': '텍스트', '.ipynb': '노트북(JSON)', '.gradle': 'Gradle', '.cfg': '설정', '.env': '환경 설정'}
+
+
 class Api:
     def __init__(self):
         self._window = None
@@ -989,6 +1128,26 @@ class Api:
                 with open(p, "rb") as f:
                     return {"ok": True, "kind": "image", "name": os.path.basename(p),
                             "src": "data:" + img[ext] + ";base64," + base64.b64encode(f.read()).decode("ascii")}
+            if ext in OFFICE_KINDS:
+                if size > 50 * 1024 * 1024:
+                    return {"ok": False, "error": "파일이 너무 커서 미리볼 수 없습니다 (50MB 초과). \"현재 파일 열기\"를 쓰십시오"}
+                try:
+                    text = "\n".join(office_text(p, ext))
+                except (zipfile.BadZipFile, KeyError, ValueError, ET.ParseError, RuntimeError):
+                    return {"ok": False, "error": "열 수 없는 파일입니다. 암호가 걸렸거나 손상되었을 수 있습니다. \"현재 파일 열기\"를 쓰십시오"}
+                if not text.strip():
+                    return {"ok": False, "error": "뽑을 글자가 없습니다. \"현재 파일 열기\"를 쓰십시오"}
+                cut = len(text) > 300 * 1024
+                return {"ok": True, "kind": "text", "name": os.path.basename(p), "text": text[:300 * 1024],
+                        "truncated": cut, "size": size, "lang": OFFICE_KINDS[ext] + " (글자만, 모양은 현재 파일 열기로 확인)"}
+            if ext in OLD_OFFICE:
+                return {"ok": False, "error": "옛 형식(" + ext + ")은 미리볼 수 없습니다. \"현재 파일 열기\"를 쓰십시오"}
+            if ext == ".pdf":
+                if size > 20 * 1024 * 1024:
+                    return {"ok": False, "error": "PDF가 너무 커서 미리볼 수 없습니다 (20MB 초과). \"현재 파일 열기\"를 쓰십시오"}
+                with open(p, "rb") as f:
+                    return {"ok": True, "kind": "pdf", "name": os.path.basename(p),
+                            "b64": base64.b64encode(f.read()).decode("ascii")}
             with open(p, "rb") as f:
                 raw = f.read(300 * 1024)
         except OSError as e:
@@ -997,7 +1156,7 @@ class Api:
             return {"ok": False, "error": "글자 파일이 아니라서 미리볼 수 없습니다. \"현재 파일 열기\"를 쓰십시오"}
         kind = "html" if ext in (".html", ".htm") else "md" if ext in (".md", ".markdown") else "text"
         return {"ok": True, "kind": kind, "name": os.path.basename(p), "text": raw.decode("utf-8", errors="replace"),
-                "truncated": size > len(raw), "size": size}
+                "truncated": size > len(raw), "size": size, "lang": PV_LANGS.get(ext, "")}
 
     def open_path(self, idx, folder):
         p = core.file_path_of(self._cur["files"][idx])
