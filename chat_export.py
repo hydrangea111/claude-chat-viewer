@@ -32,7 +32,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v5.6"
+TITLE = "Claude Code 대화창 v5.7"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -520,6 +520,37 @@ class Api:
             title, ts = core.session_info(p)
             title = titles.get(p.stem) or title
             out.append({"path": str(p), "title": title, "date": core.local_time(ts), "project": p.parent.name})
+        return out
+
+    def search_sessions(self, q):
+        """대화 내용 검색: {경로: {"snip": 일치한 곳 앞뒤 글, "n": 일치 횟수}}. 파일이 바뀌지 않았으면 읽어 둔 글을 다시 쓴다."""
+        q = (q or "").strip().lower()
+        if len(q) < 2 or not core.PROJECTS.exists():
+            return {}
+        cache = self.__dict__.setdefault("_txt_cache", {})
+        out = {}
+        for p in core.PROJECTS.glob("*/*.jsonl"):
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            key = (st.st_mtime_ns, st.st_size)
+            ent = cache.get(str(p))
+            if not ent or ent[0] != key:
+                try:
+                    txt = core.plain_text(p)
+                except OSError:
+                    continue
+                ent = (key, txt, txt.lower())
+                cache[str(p)] = ent
+            low = ent[2]
+            i = low.find(q)
+            if i < 0:
+                continue
+            txt = ent[1]
+            a, b = max(0, i - 28), min(len(txt), i + len(q) + 60)
+            snip = " ".join(txt[a:b].replace("**", "").replace("`", "").split())
+            out[str(p)] = {"snip": ("…" if a else "") + snip + ("…" if b < len(txt) else ""), "n": low.count(q)}
         return out
 
     def open_session(self, path, title, with_rem):

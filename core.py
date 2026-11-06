@@ -43,6 +43,22 @@ def read_lines(path):
                     pass
 
 
+def plain_text(path):
+    """대화 검색용: 사람이 읽는 글(내 말과 Claude의 답)만 모은다. 도구 결과와 시스템 안내는 뺀다."""
+    out = []
+    for r in read_lines(path):
+        if r.get("type") not in ("user", "assistant") or r.get("isCompactSummary"):
+            continue
+        m = r.get("message")
+        c = m.get("content") if isinstance(m, dict) else None
+        x = text_of(c)
+        if x:
+            x = REMINDER_RE.sub("", TASKNOTE_RE.sub("", x)).strip()
+            if x and not x.lstrip().startswith(COMPACT_HEAD):
+                out.append(x)
+    return chr(10).join(out)
+
+
 def local_time(ts):
     try:
         return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone().strftime("%Y-%m-%d %H:%M:%S")
