@@ -35,7 +35,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v5.8"
+TITLE = "Claude Code 대화창 v5.9"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -637,6 +637,7 @@ PV_LANGS = {'.py': 'Python', '.pyw': 'Python', '.c': 'C', '.h': 'C/C++ 헤더', 
 
 class Api:
     def __init__(self):
+        self._edit_paths = {}
         self._window = None
         self._cur = None
         self._cur_path = None
@@ -1157,6 +1158,71 @@ class Api:
         kind = "html" if ext in (".html", ".htm") else "md" if ext in (".md", ".markdown") else "text"
         return {"ok": True, "kind": kind, "name": os.path.basename(p), "text": raw.decode("utf-8", errors="replace"),
                 "truncated": size > len(raw), "size": size, "lang": PV_LANGS.get(ext, "")}
+
+    def edit_open(self, idx):
+        """파일 탭의 글자 파일을 옆 편집 창으로 연다. 대화에 나온 파일만, 글자 파일만, 2MB까지."""
+        try:
+            p = core.file_path_of(self._cur["files"][idx])
+        except (TypeError, KeyError, IndexError, AttributeError):
+            return {"ok": False, "error": "파일을 찾지 못했습니다"}
+        if not p or not os.path.isfile(p):
+            return {"ok": False, "error": "현재 이 경로에 파일이 없습니다"}
+        ext = os.path.splitext(p)[1].lower()
+        if ext in OFFICE_KINDS or ext in OLD_OFFICE or ext in (".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico",
+                                                               ".zip", ".exe", ".dll", ".7z", ".mp3", ".mp4", ".wav"):
+            return {"ok": False, "error": "글자 파일이 아니라서 편집 창으로 열 수 없습니다. 미리보기나 \"현재 파일 열기\"를 쓰십시오"}
+        try:
+            size = os.path.getsize(p)
+            if size > 2 * 1024 * 1024:
+                return {"ok": False, "error": "파일이 너무 커서 편집 창으로 열 수 없습니다 (2MB 초과)"}
+            with open(p, "rb") as f:
+                raw = f.read()
+            mt = os.stat(p).st_mtime_ns
+        except OSError as e:
+            return {"ok": False, "error": "파일을 읽지 못했습니다 (" + str(e)[:60] + ")"}
+        if b"\0" in raw[:4096]:
+            return {"ok": False, "error": "글자 파일이 아니라서 편집 창으로 열 수 없습니다"}
+        enc = "utf-8-sig" if raw.startswith(b"\xef\xbb\xbf") else "utf-8"
+        try:
+            text = raw.decode(enc)
+        except UnicodeDecodeError:
+            try:
+                enc, text = "cp949", raw.decode("cp949")
+            except UnicodeDecodeError:
+                return {"ok": False, "error": "글자 부호를 알 수 없어 편집 창으로 열 수 없습니다 (UTF-8, CP949만 지원)"}
+        eol = "\r\n" if "\r\n" in text else "\n"
+        self._edit_paths[os.path.normcase(os.path.abspath(p))] = p
+        return {"ok": True, "path": p, "name": os.path.basename(p), "text": text.replace("\r\n", "\n"),
+                "enc": enc, "eol": eol, "mtime": str(mt), "lang": PV_LANGS.get(ext, "")}
+
+    def edit_save(self, path, text, base_mtime, enc, eol, force=False):
+        """편집 창의 내용을 저장한다. edit_open 으로 연 파일만. 디스크에서 그 사이 바뀌었으면 덮어쓰지 않고 알린다."""
+        key = os.path.normcase(os.path.abspath(str(path)))
+        p = self._edit_paths.get(key)
+        if not p:
+            return {"ok": False, "error": "편집 창으로 연 파일이 아닙니다"}
+        if enc not in ("utf-8", "utf-8-sig", "cp949") or eol not in ("\n", "\r\n") or not isinstance(text, str):
+            return {"ok": False, "error": "저장 형식이 올바르지 않습니다"}
+        try:
+            if os.path.exists(p) and not force and str(os.stat(p).st_mtime_ns) != str(base_mtime):
+                return {"ok": False, "conflict": True, "error": "열어 둔 뒤에 디스크의 파일이 바뀌었습니다"}
+            data = text.replace("\r\n", "\n").replace("\n", eol).encode(enc)
+        except UnicodeEncodeError:
+            return {"ok": False, "error": "이 파일의 글자 부호(" + enc + ")로 표현할 수 없는 글자가 있습니다"}
+        except OSError as e:
+            return {"ok": False, "error": "저장하지 못했습니다 (" + str(e)[:60] + ")"}
+        tmp = p + ".ccv-tmp"
+        try:
+            with open(tmp, "wb") as f:
+                f.write(data)
+            os.replace(tmp, p)
+            return {"ok": True, "mtime": str(os.stat(p).st_mtime_ns)}
+        except OSError as e:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+            return {"ok": False, "error": "저장하지 못했습니다 (" + str(e)[:60] + ")"}
 
     def open_path(self, idx, folder):
         p = core.file_path_of(self._cur["files"][idx])

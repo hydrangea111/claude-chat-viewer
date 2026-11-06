@@ -373,11 +373,24 @@ details.work[open] summary{margin-bottom:8px}
 #toast.on{opacity:1;transform:translateX(-50%)}
 .spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;margin:30px auto}
 @keyframes s{to{transform:rotate(360deg)}}
+
+#erz{width:7px;margin:0 -3px 0 -4px;cursor:col-resize;z-index:6;flex-shrink:0;position:relative;touch-action:none;display:none}
+#erz:hover,body.dragging #erz{background:linear-gradient(90deg,transparent 2px,var(--accent) 2px,var(--accent) 4px,transparent 4px)}
+#ed{width:var(--ew,44%);min-width:300px;max-width:78%;flex-shrink:0;display:none;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);min-height:0}
+body.edon #ed{display:flex}body.edon #erz{display:block}
+.edh{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.edh .nm{flex:1;min-width:0}.edh .nm b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edh .nm small{display:block;color:var(--dim);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}
+.edh .dot{display:none;width:9px;height:9px;border-radius:50%;background:var(--accent);flex-shrink:0}.edh .dot.on{display:inline-block}
+.edwrap{flex:1;display:flex;min-height:0;background:var(--code)}
+#edLn{margin:0;padding:10px 8px 24px 10px;overflow:hidden;text-align:right;color:var(--dim);user-select:none;white-space:pre;font:13px/1.55 Consolas,"D2Coding","Malgun Gothic",monospace;border-right:1px solid var(--line);min-width:2.6em}
+#edTa{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;color:var(--text);font:13px/1.55 Consolas,"D2Coding","Malgun Gothic",monospace;white-space:pre;overflow:auto;tab-size:4;padding:10px 12px 24px;margin:0}
+.edst{display:flex;gap:14px;padding:4px 12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim)}.edst .sp{flex:1}
 </style>
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.8</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.9</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -447,6 +460,11 @@ details.work[open] summary{margin-bottom:8px}
     <button id="bBottom" title="맨 아래로"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
   </div>
 </main>
+<div id="erz" title="끌어서 편집 창 크기 조절"></div>
+<section id="ed" aria-label="코드 편집 창"><div class="edh"><span class="dot" id="edDot" title="저장하지 않은 수정이 있습니다"></span><div class="nm"><b id="edName"></b><small id="edPath"></small></div><button class="btn sm primary" id="edSave" type="button" title="저장 (Ctrl+S)">저장</button><button class="btn sm" id="edReload" type="button" title="디스크의 현재 내용으로 다시 불러옵니다">다시 불러오기</button><button class="btn sm" id="edClose" type="button" title="편집 창 닫기">닫기</button></div>
+<div class="edwrap"><pre id="edLn">1</pre><textarea id="edTa" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea></div>
+<div class="edst"><span id="edPos">줄 1, 칸 1</span><span id="edInfo"></span><span class="sp"></span><span id="edMsg">Ctrl+S 로 저장</span></div></section>
+
 <div class="pvm" id="pvm" hidden><div class="pvb" role="dialog" aria-modal="true"><div class="pvh"><b id="pvT"></b><button class="btn sm" id="pvX" type="button">닫기</button></div><div class="pvnote" id="pvN" hidden></div><div class="pvbody" id="pvC"></div></div></div>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true">
   <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
@@ -781,7 +799,7 @@ async function pick(k,i){
   el.querySelectorAll('.row').forEach(r=>r.classList.toggle('on',+r.dataset.i===i));
   const d=await api_().detail(k,i),r=data[k][i];
   let head=`<div class="dh"><div class="p">${esc(k==='files'?r.path:r.tool+' · '+(r.cmd||r.sum||''))}</div>`;
-  if(k==='files')head+=`<button class="btn sm" id="bPrev"${r.exists?'':' disabled'}>미리보기</button><button class="btn sm" id="bFolder"${r.exists?'':' disabled'}>폴더 열기</button><button class="btn sm" id="bFile"${r.exists?'':' disabled'}>현재 파일 열기</button>`;
+  if(k==='files')head+=`<button class="btn sm primary" id="bEdit"${r.exists?'':' disabled'} title="대화창 옆에 코드 창을 띄워 고치고 저장합니다">편집 창으로 열기</button><button class="btn sm" id="bPrev"${r.exists?'':' disabled'}>미리보기</button><button class="btn sm" id="bFolder"${r.exists?'':' disabled'}>폴더 열기</button><button class="btn sm" id="bFile"${r.exists?'':' disabled'}>현재 파일 열기</button>`;
   head+='</div>';
   const lines=d.text.split('\n').map(l=>{
     let c='';if(d.diff){if(l.startsWith('+')&&!l.startsWith('+++'))c='add';else if(l.startsWith('-')&&!l.startsWith('---'))c='del';else if(l.startsWith('@@'))c='hunk'}
@@ -790,6 +808,7 @@ async function pick(k,i){
   if(k==='files'){
     const f=async folder=>{if(!await api_().open_path(i,folder))toast('현재 이 경로에 파일이 없습니다')};
     $('#bFolder').onclick=()=>f(true);$('#bFile').onclick=()=>f(false);
+    $('#bEdit').onclick=()=>edOpen(i);
     $('#bPrev').onclick=async()=>{const r2=await api_().preview_file(i);if(!r2||!r2.ok)return toast((r2&&r2.error)||'미리볼 수 없습니다');
       const note=(r2.kind==='html'?PV_NOTE+' ':'')+(r2.lang?r2.lang+(r2.lang.indexOf('글자만')>=0?'. ':' 파일입니다. '):'')+(r2.truncated?'파일이 커서 앞부분만 보여 줍니다. ':'');
       openPv(r2.name,pvBody(r2),note.trim())};
@@ -819,6 +838,65 @@ function previewCode(lang,code){
   if(lang==='md'||lang==='markdown')return openPv('마크다운 미리보기','<div class="pvmd">'+md(code)+'</div>');
   if(lang==='html'||lang==='htm')return openPv('HTML 미리보기',pvHtml(code),PV_NOTE);
   openPv(lang+' 코드',pvBody({kind:'text',text:code}))}
+
+
+/* ---- 편집 창: 파일 탭의 글자 파일을 대화창 옆에 띄워 고치고 저장한다 (대화에 나온 파일만, 2MB까지) ---- */
+let ed=null,edSbWas=0;   // {idx,path,enc,eol,mtime,orig,tab}
+const edDirty=()=>!!ed&&$('#edTa').value!==ed.orig;
+function edLines(){const n=$('#edTa').value.split('\n').length;let s='';for(let i=1;i<=n;i++)s+=i+'\n';$('#edLn').textContent=s.slice(0,-1)}
+function edStat(){const t=$('#edTa'),v=t.value,p=t.selectionStart,before=v.slice(0,p),ln=before.split('\n').length,col=p-before.lastIndexOf('\n');
+  $('#edPos').textContent='줄 '+ln+', 칸 '+col;$('#edDot').classList.toggle('on',edDirty());
+  $('#edMsg').textContent=edDirty()?'수정됨 · Ctrl+S 로 저장':'저장됨'}
+function edShow(r,idx){
+  ed={idx,path:r.path,enc:r.enc,eol:r.eol,mtime:r.mtime,orig:r.text,tab:/(^|\n)\t/.test(r.text)&&!/(^|\n) {2}/.test(r.text)};
+  $('#edName').textContent=r.name;$('#edPath').textContent=r.path;$('#edPath').title=r.path;
+  const t=$('#edTa');t.value=r.text;edLines();t.scrollTop=0;t.scrollLeft=0;$('#edLn').scrollTop=0;
+  $('#edInfo').textContent=(r.lang?r.lang+' · ':'')+({'utf-8':'UTF-8','utf-8-sig':'UTF-8(BOM)','cp949':'CP949'})[r.enc]+' · '+(r.eol==='\r\n'?'CRLF':'LF');
+  if(!document.body.classList.contains('edon')&&sbW>0&&innerWidth<1500){edSbWas=sbW;setSb(0,false)}   // 창이 좁으면 대화창이 눌리지 않게 사이드바를 접는다
+  document.body.classList.add('edon');edStat();t.focus()}
+async function edOpen(idx){
+  if(edDirty()&&!await ask('저장하지 않은 수정이 있습니다','지금 열린 파일의 수정 내용이 사라집니다. 다른 파일을 여시겠습니까?','버리고 열기',true))return;
+  const r=await api_().edit_open(idx);if(!r||!r.ok)return toast((r&&r.error)||'편집 창으로 열 수 없습니다');
+  edShow(r,idx)}
+async function edSave(force){
+  if(!ed)return;const t=$('#edTa').value;
+  const r=await api_().edit_save(ed.path,t,ed.mtime,ed.enc,ed.eol,!!force);
+  if(r&&r.conflict){if(await ask('디스크의 파일이 바뀌었습니다','열어 둔 뒤에 Claude나 다른 프로그램이 이 파일을 바꿨습니다.\n내 수정 내용으로 덮어쓰시겠습니까?','덮어쓰기',true))return edSave(true);return}
+  if(!r||!r.ok)return toast((r&&r.error)||'저장하지 못했습니다');
+  ed.orig=t;ed.mtime=r.mtime;edStat();toast('저장했습니다')}
+async function edClose(){
+  if(edDirty()&&!await ask('저장하지 않은 수정이 있습니다','편집 창을 닫으면 수정 내용이 사라집니다. 닫으시겠습니까?','버리고 닫기',true))return;
+  ed=null;document.body.classList.remove('edon');$('#edTa').value='';if(edSbWas&&sbW===0)setSb(edSbWas,false);edSbWas=0}
+$('#edSave').onclick=()=>edSave(false);$('#edClose').onclick=edClose;
+$('#edReload').onclick=async()=>{if(!ed)return;
+  if(edDirty()&&!await ask('수정 내용을 버리겠습니까?','디스크의 현재 내용으로 다시 불러오면 지금까지의 수정이 사라집니다.','다시 불러오기',true))return;
+  const r=await api_().edit_open(ed.idx);if(!r||!r.ok)return toast((r&&r.error)||'다시 불러오지 못했습니다');edShow(r,ed.idx)};
+(function(){const t=$('#edTa');
+  t.addEventListener('input',()=>{edLines();edStat()});
+  t.addEventListener('scroll',()=>{$('#edLn').scrollTop=t.scrollTop});
+  ['keyup','click','select'].forEach(ev=>t.addEventListener(ev,edStat));
+  const ins=s=>{if(!document.execCommand('insertText',false,s))t.setRangeText(s,t.selectionStart,t.selectionEnd,'end')};
+  t.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();edSave(false);return}
+    if(e.isComposing)return;
+    const v=t.value,s=t.selectionStart,en=t.selectionEnd,unit=ed&&ed.tab?'\t':'    ';
+    if(e.key==='Tab'){e.preventDefault();
+      if(s===en&&!e.shiftKey){ins(unit);return}
+      // 여러 줄 선택: 줄마다 들여쓰기 / 내어쓰기
+      const a=v.lastIndexOf('\n',s-1)+1,seg=v.slice(a,en),out=e.shiftKey?seg.replace(/^(\t| {1,4})/gm,''):seg.replace(/^/gm,unit);
+      t.setSelectionRange(a,en);ins(out);t.setSelectionRange(a,a+out.length);return}
+    if(e.key==='Enter'&&!e.shiftKey&&!e.ctrlKey){   // 윗줄의 들여쓰기를 이어 간다
+      const a=v.lastIndexOf('\n',s-1)+1,ind=/^[ \t]*/.exec(v.slice(a,s))[0];
+      e.preventDefault();ins('\n'+ind)}
+  });
+  // 옆 창 크기 조절
+  $('#erz').addEventListener('pointerdown',e=>{e.preventDefault();const rz=$('#erz');rz.setPointerCapture(e.pointerId);document.body.classList.add('dragging');
+    const mv=ev=>{const w=innerWidth-ev.clientX;document.documentElement.style.setProperty('--ew',Math.max(300,Math.min(innerWidth*.78,w))+'px')};
+    const up=()=>{rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);document.body.classList.remove('dragging')};
+    rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up)});
+  // 저장 안 한 수정이 있는 채로 창을 닫거나 새로고침하려 하면 한 번 묻는다
+  addEventListener('beforeunload',e=>{if(edDirty()){e.preventDefault();e.returnValue=''}});
+})();
 
 /* ---- 상단 ---- */
 $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
@@ -954,6 +1032,7 @@ $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
 document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
   if(e.key==='Escape'&&!$('#pvm').hidden){closePv();e.preventDefault();return}
+  if(e.key==='Escape'&&$('#ed').contains(document.activeElement))return;
   if(e.key==='Escape'&&(!$('#omenu').hidden||!$('#xmenu').hidden)){closePops();e.preventDefault();return}
   if(e.key==='Escape'&&!e.isComposing&&!e.defaultPrevented&&speaking){stopSpeech();e.preventDefault();toast('읽기를 멈췄습니다');return}
   if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;
