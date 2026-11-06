@@ -118,9 +118,21 @@ section.on{display:flex}
 .bubble code{background:var(--code);padding:1px 6px;border-radius:5px;font:12.5px Consolas,monospace;color:inherit}
 .msg.user .bubble code{background:rgba(255,255,255,.2)}
 .codebox{position:relative;margin:8px 0 2px}
-.codebox .cpcode{position:absolute;top:6px;right:8px;z-index:1;border:1px solid var(--line);background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;padding:1px 9px;border-radius:8px;cursor:pointer;opacity:.75}
-.codebox:hover .cpcode{opacity:1}.codebox .cpcode:hover{color:var(--accent);border-color:var(--accent)}
+.codebox .cpbar{position:absolute;top:6px;right:8px;z-index:1;display:flex;gap:6px;opacity:.75}
+.codebox:hover .cpbar{opacity:1}
+.codebox .cpbar button{border:1px solid var(--line);background:var(--panel);color:var(--dim);font:inherit;font-size:11.5px;padding:1px 9px;border-radius:8px;cursor:pointer}
+.codebox .cpbar button:hover{color:var(--accent);border-color:var(--accent)}
 .bubble .codebox pre{padding-right:64px}
+.bubble .codebox:has(.pvcode) pre{padding-right:130px}
+.pvm{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:24px}.pvm[hidden]{display:none}
+.pvb{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4);width:min(1000px,100%);height:min(720px,100%);display:flex;flex-direction:column;overflow:hidden}
+.pvh{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}.pvh b{flex:1;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvnote{font-size:11.5px;color:var(--dim);padding:6px 14px;border-bottom:1px solid var(--line)}
+.pvbody{flex:1;min-height:0;overflow:auto}.pvbody iframe{width:100%;height:100%;border:0;background:#fff;display:block}
+.pvbody .pvimg{display:grid;place-items:center;padding:16px;min-height:100%;background:repeating-conic-gradient(var(--code) 0 25%,transparent 0 50%) 0 0/20px 20px}.pvbody .pvimg img{max-width:100%;max-height:100%;object-fit:contain}
+.pvbody .pvmd{padding:16px 20px;white-space:pre-wrap;line-height:1.7}
+.pvbody .code{margin:0;border:0;border-radius:0}.pvbody .code .ln{display:inline-block;min-width:3.2em;margin-right:12px;text-align:right;color:var(--dim);user-select:none}
+
 .bubble pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow:auto;margin:0;font:12.5px/1.55 Consolas,monospace;white-space:pre;color:var(--text)}
 .bubble pre code{background:none;padding:0}
 .bubble b{font-weight:700}
@@ -365,7 +377,7 @@ details.work[open] summary{margin-bottom:8px}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.7</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.8</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -435,6 +447,7 @@ details.work[open] summary{margin-bottom:8px}
     <button id="bBottom" title="맨 아래로"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></button>
   </div>
 </main>
+<div class="pvm" id="pvm" hidden><div class="pvb" role="dialog" aria-modal="true"><div class="pvh"><b id="pvT"></b><button class="btn sm" id="pvX" type="button">닫기</button></div><div class="pvnote" id="pvN" hidden></div><div class="pvbody" id="pvC"></div></div></div>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true">
   <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
   <label id="mSkipL" class="skipl" hidden><input type="checkbox" id="mSkip"><span>다음부터 이 확인창 보지 않기</span></label>
@@ -571,7 +584,7 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clea
 // 간단 마크다운: ``` 코드블록, `인라인`, **굵게**
 function md(s){
   return s.split(/```/).map((seg,i)=>{
-    if(i%2){const nl=seg.indexOf('\n');return '<div class="codebox"><button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button><pre><code>'+esc(nl>=0&&nl<20?seg.slice(nl+1):seg)+'</code></pre></div>'}
+    if(i%2){const nl=seg.indexOf('\n'),lg=nl>=0&&nl<20?seg.slice(0,nl).trim().toLowerCase():'';const pv=['html','htm','svg','md','markdown'].includes(lg);return '<div class="codebox"><span class="cpbar">'+(pv?'<button class="pvcode" type="button" data-lang="'+lg+'" title="이 코드를 화면으로 미리 봅니다">미리보기</button>':'')+'<button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button></span><pre><code>'+esc(nl>=0&&nl<20?seg.slice(nl+1):seg)+'</code></pre></div>'}
     return esc(seg).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
   }).join('').replace(/<\/pre><\/div>\n/g,'</pre></div>');
 }
@@ -723,6 +736,8 @@ function renderChat(live){
   el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
 }
 $('#chat').onclick=async e=>{
+  const pvb=e.target.closest('.pvcode');
+  if(pvb){const pre=pvb.closest('.codebox').querySelector('pre');previewCode(pvb.dataset.lang,pre?pre.textContent:'');return}
   const cpb=e.target.closest('.cpcode');
   if(cpb){const code=cpb.parentElement.querySelector('pre');if(await copyText(code?code.textContent:'')){cpb.textContent='복사됨';setTimeout(()=>{cpb.textContent='복사'},1200)}else toast('복사하지 못했습니다');return}
   const fb=e.target.closest('.foldbtn');
@@ -761,7 +776,7 @@ async function pick(k,i){
   el.querySelectorAll('.row').forEach(r=>r.classList.toggle('on',+r.dataset.i===i));
   const d=await api_().detail(k,i),r=data[k][i];
   let head=`<div class="dh"><div class="p">${esc(k==='files'?r.path:r.tool+' · '+(r.cmd||r.sum||''))}</div>`;
-  if(k==='files')head+=`<button class="btn sm" id="bFolder"${r.exists?'':' disabled'}>폴더 열기</button><button class="btn sm" id="bFile"${r.exists?'':' disabled'}>현재 파일 열기</button>`;
+  if(k==='files')head+=`<button class="btn sm" id="bPrev"${r.exists?'':' disabled'}>미리보기</button><button class="btn sm" id="bFolder"${r.exists?'':' disabled'}>폴더 열기</button><button class="btn sm" id="bFile"${r.exists?'':' disabled'}>현재 파일 열기</button>`;
   head+='</div>';
   const lines=d.text.split('\n').map(l=>{
     let c='';if(d.diff){if(l.startsWith('+')&&!l.startsWith('+++'))c='add';else if(l.startsWith('-')&&!l.startsWith('---'))c='del';else if(l.startsWith('@@'))c='hunk'}
@@ -770,8 +785,32 @@ async function pick(k,i){
   if(k==='files'){
     const f=async folder=>{if(!await api_().open_path(i,folder))toast('현재 이 경로에 파일이 없습니다')};
     $('#bFolder').onclick=()=>f(true);$('#bFile').onclick=()=>f(false);
+    $('#bPrev').onclick=async()=>{const r2=await api_().preview_file(i);if(!r2||!r2.ok)return toast((r2&&r2.error)||'미리볼 수 없습니다');
+      const note=(r2.kind==='html'?PV_NOTE+' ':'')+(r2.truncated?'파일이 커서 앞부분만 보여 줍니다. ':'');
+      openPv(r2.name,pvBody(r2),note.trim())};
   }
 }
+
+
+/* ---- 미리보기: 코드 상자(html·svg·md)와 파일 탭의 파일을 화면으로 본다. 미리보기 안의 글은 인터넷에 접속하지 못한다 ---- */
+const PV_CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:\">";
+const escA=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+function pvHtml(code){return '<iframe sandbox="allow-scripts" srcdoc="'+escA(PV_CSP+code)+'"></iframe>'}
+function pvBody(r){
+  if(r.kind==='image')return '<div class="pvimg"><img alt="" src="'+escA(r.src)+'"></div>';
+  if(r.kind==='html')return pvHtml(r.text);
+  if(r.kind==='md')return '<div class="pvmd">'+md(r.text)+'</div>';
+  return '<div class="code">'+r.text.split(String.fromCharCode(13)).join('').split(String.fromCharCode(10)).map((l,i)=>'<div><span class="ln">'+(i+1)+'</span>'+(esc(l)||' ')+'</div>').join('')+'</div>'}
+function openPv(title,bodyHtml,note){
+  $('#pvT').textContent=title;$('#pvC').innerHTML=bodyHtml;
+  const n=$('#pvN');n.textContent=note||'';n.hidden=!note;$('#pvm').hidden=false;$('#pvC').scrollTop=0}
+function closePv(){$('#pvm').hidden=true;$('#pvC').innerHTML=''}
+$('#pvX').onclick=closePv;$('#pvm').addEventListener('mousedown',e=>{if(e.target.id==='pvm')closePv()});
+const PV_NOTE='미리보기 안에서는 인터넷에 접속하지 않고, 같은 폴더의 다른 파일도 불러오지 않습니다. 실제와 다르게 보일 수 있습니다.';
+function previewCode(lang,code){
+  if(lang==='svg')return openPv('SVG 미리보기','<div class="pvimg"><img alt="" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(code)+'"></div>');
+  if(lang==='md'||lang==='markdown')return openPv('마크다운 미리보기','<div class="pvmd">'+md(code)+'</div>');
+  openPv('HTML 미리보기',pvHtml(code),PV_NOTE)}
 
 /* ---- 상단 ---- */
 $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
@@ -906,10 +945,11 @@ async function send(){
 $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
 document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
+  if(e.key==='Escape'&&!$('#pvm').hidden){closePv();e.preventDefault();return}
   if(e.key==='Escape'&&(!$('#omenu').hidden||!$('#xmenu').hidden)){closePops();e.preventDefault();return}
   if(e.key==='Escape'&&!e.isComposing&&!e.defaultPrevented&&speaking){stopSpeech();e.preventDefault();toast('읽기를 멈췄습니다');return}
   if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;
-  if(!$('#modal').hidden||!$('#helpModal').hidden||!$('#slash').hidden||!$('#mmenu').hidden)return;
+  if(!$('#modal').hidden||!$('#helpModal').hidden||!$('#pvm').hidden||!$('#slash').hidden||!$('#mmenu').hidden)return;
   e.preventDefault();userStopped=true;api_().stop();toast('응답을 중지했습니다')});
 $('#chat').addEventListener('click',e=>{const b=e.target.closest('button[data-q]');if(!b)return;   // 예약 취소: 입력창으로 되돌림
   const [it]=queue.splice(+b.dataset.q,1);if(!it)return;const t=$('#msg');t.value=t.value?it.text+'\n\n'+t.value:it.text;autosize();renderChat(true);t.focus()});

@@ -1,4 +1,5 @@
 """Claude Code 대화창: pywebview 창에 ui.html을 띄우고 core의 파싱 결과를 JS에 넘긴다."""
+import base64
 import json
 import os
 import re
@@ -32,7 +33,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v5.7"
+TITLE = "Claude Code 대화창 v5.8"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -968,6 +969,35 @@ class Api:
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
                 r["proc"].terminate()
+
+    def preview_file(self, idx):
+        """파일 탭 미리보기. 대화에 나온 파일만, 읽기 전용으로, 크기를 제한해서 보여 준다."""
+        try:
+            p = core.file_path_of(self._cur["files"][idx])
+        except (TypeError, KeyError, IndexError, AttributeError):
+            return {"ok": False, "error": "파일을 찾지 못했습니다"}
+        if not p or not os.path.isfile(p):
+            return {"ok": False, "error": "현재 이 경로에 파일이 없습니다"}
+        ext = os.path.splitext(p)[1].lower()
+        size = os.path.getsize(p)
+        img = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+               ".webp": "image/webp", ".bmp": "image/bmp", ".ico": "image/x-icon", ".svg": "image/svg+xml"}
+        try:
+            if ext in img:
+                if size > 8 * 1024 * 1024:
+                    return {"ok": False, "error": "이미지가 너무 커서 미리볼 수 없습니다 (8MB 초과)"}
+                with open(p, "rb") as f:
+                    return {"ok": True, "kind": "image", "name": os.path.basename(p),
+                            "src": "data:" + img[ext] + ";base64," + base64.b64encode(f.read()).decode("ascii")}
+            with open(p, "rb") as f:
+                raw = f.read(300 * 1024)
+        except OSError as e:
+            return {"ok": False, "error": "파일을 읽지 못했습니다 (" + str(e)[:60] + ")"}
+        if b"\0" in raw[:4096]:
+            return {"ok": False, "error": "글자 파일이 아니라서 미리볼 수 없습니다. \"현재 파일 열기\"를 쓰십시오"}
+        kind = "html" if ext in (".html", ".htm") else "md" if ext in (".md", ".markdown") else "text"
+        return {"ok": True, "kind": kind, "name": os.path.basename(p), "text": raw.decode("utf-8", errors="replace"),
+                "truncated": size > len(raw), "size": size}
 
     def open_path(self, idx, folder):
         p = core.file_path_of(self._cur["files"][idx])
