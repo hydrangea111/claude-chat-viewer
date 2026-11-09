@@ -25,12 +25,25 @@ def main():
     root = tk.Tk()
     root.overrideredirect(True)
     pic = tk.PhotoImage(file=str(img))
-    tk.Label(root, image=pic, borderwidth=0).pack()
-    root.update_idletasks()
     w, h = pic.width(), pic.height()
+    cv = tk.Canvas(root, width=w, height=h, highlightthickness=0, borderwidth=0)
+    cv.pack()
+    cv.create_image(0, 0, image=pic, anchor="nw")
+    cv.create_oval(624, 74, 664, 114, outline="#e6ded1", width=5)
+    arc = cv.create_arc(624, 74, 664, 114, style="arc", start=90, extent=110, outline="#c8643c", width=5)
+    bar = cv.create_rectangle(-150, 190, 0, 195, fill="#c8643c", outline="")
+    st = {"a": 90, "x": -150}
+
+    def spin():   # 멈춘 게 아니라는 표시
+        st["a"] -= 12
+        st["x"] = st["x"] + 10 if st["x"] < 700 else -150
+        cv.itemconfigure(arc, start=st["a"])
+        cv.coords(bar, st["x"], 190, st["x"] + 150, 195)
+        root.after(30, spin)
+    root.update_idletasks()
     root.geometry("%dx%d+%d+%d" % (w, h, (root.winfo_screenwidth() - w) // 2, (root.winfo_screenheight() - h) // 2))
     drag = {}
-    lab = root.winfo_children()[0]
+    lab = cv
     lab.configure(cursor="fleur")   # 제목줄이 없는 안내 창이라 끌어서 옮길 수 있게 한다
     lab.bind("<ButtonPress-1>", lambda e: drag.update(x=e.x_root - root.winfo_x(), y=e.y_root - root.winfo_y()))
     lab.bind("<B1-Motion>", lambda e: root.geometry("+%d+%d" % (e.x_root - drag["x"], e.y_root - drag["y"])))
@@ -46,6 +59,7 @@ def main():
         else:
             root.after(150, poll)
 
+    spin()
     poll()
     root.mainloop()
 

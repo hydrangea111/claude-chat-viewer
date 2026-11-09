@@ -25,6 +25,22 @@ class DragSplash(Splash):
 bind .root.canvas <ButtonPress-1> {set ::dragx [expr {%X-[winfo rootx .]}]; set ::dragy [expr {%Y-[winfo rooty .]}]}
 bind .root.canvas <B1-Motion> {wm geometry . +[expr {%X-$::dragx}]+[expr {%Y-$::dragy}]}
 .root.canvas configure -cursor fleur
+# spinner + sweeping bar (ASCII only: the bootloader cuts the script by character count)
+.root.canvas create oval 624 74 664 114 -outline #e6ded1 -width 5 -tags spin_t
+.root.canvas create arc 624 74 664 114 -style arc -start 90 -extent 110 -outline #c8643c -width 5 -tags spin
+.root.canvas create rectangle 0 190 700 195 -fill #ece5d9 -outline "" -tags bar_t
+.root.canvas create rectangle -150 190 0 195 -fill #c8643c -outline "" -tags bar
+set ::ccv_ang 90
+set ::ccv_bx -150
+proc ccv_tick {} {
+  incr ::ccv_ang -12
+  .root.canvas itemconfigure spin -start $::ccv_ang
+  incr ::ccv_bx 10
+  if {$::ccv_bx > 700} {set ::ccv_bx -150}
+  .root.canvas coords bar $::ccv_bx 190 [expr {$::ccv_bx + 150}] 195
+  after 30 ccv_tick
+}
+ccv_tick
 """
         with open(self.script_name, "w", encoding="utf-8") as fh:
             fh.write(script)
