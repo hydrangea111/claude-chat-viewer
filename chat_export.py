@@ -35,7 +35,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v6.0"
+TITLE = "Claude Code 대화창 v6.1"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -1219,6 +1219,25 @@ class Api:
                 kind = "limit"
         return {"running": running, "path": r["path"], "ver": ver, "error": error, "kind": kind,
                 "model": r.get("model")}
+
+    def new_window(self, path=None):
+        """대화창을 하나 더 띄운다(별도 프로그램으로 실행되므로 창마다 Claude를 따로 돌릴 수 있다). path 가 있으면 그 대화를 연다."""
+        env = dict(os.environ, CCV_ALLOW_MULTIPLE="1", PYINSTALLER_RESET_ENVIRONMENT="1")
+        cmd = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, str(Path(__file__).resolve())]
+        if path:
+            try:
+                p = Path(path).resolve()
+                if p.suffix != ".jsonl" or core.PROJECTS.resolve() not in p.parents or not p.is_file():
+                    return {"ok": False, "error": "열 수 없는 대화입니다"}
+            except OSError:
+                return {"ok": False, "error": "열 수 없는 대화입니다"}
+            cmd.append(str(p))
+        try:
+            subprocess.Popen(cmd, env=env, close_fds=True,
+                             creationflags=(0x00000008 | 0x00000200) if os.name == "nt" else 0)   # DETACHED_PROCESS | NEW_PROCESS_GROUP
+        except OSError as e:
+            return {"ok": False, "error": "새 창을 열지 못했습니다 (" + str(e)[:60] + ")"}
+        return {"ok": True}
 
     def stop(self):
         r = self._run
