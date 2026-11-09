@@ -35,7 +35,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v5.9"
+TITLE = "Claude Code 대화창 v6.0"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -638,6 +638,9 @@ PV_LANGS = {'.py': 'Python', '.pyw': 'Python', '.c': 'C', '.h': 'C/C++ 헤더', 
 class Api:
     def __init__(self):
         self._edit_paths = {}
+        self._term = None
+        self._term_cwd = str(Path.home())
+        self._term_hint = None
         self._window = None
         self._cur = None
         self._cur_path = None
@@ -729,11 +732,127 @@ class Api:
             "ver": self._ver(path),
             "cwd": self._cwd_of(path),
             "files": [{"ts": t["ts"], "act": core.FILE_TOOLS[t["name"]], "path": core.file_path_of(t),
-                       "exists": os.path.exists(core.file_path_of(t))} for t in d["files"]],
+                       "exists": os.path.exists(self._resolve(core.file_path_of(t)))} for t in d["files"]],
             "cmds": [{"ts": t["ts"], "tool": t["name"], "cmd": (t["input"].get("command") or "").strip().split("\n")[0][:300],
                       "state": "err" if t["error"] else ("none" if t["result"] is None else "ok")} for t in d["cmds"]],
             "others": [{"ts": t["ts"], "tool": t["name"], "sum": core.tool_summary(t)} for t in d["others"]],
         }
+
+    def _resolve(self, p):
+        """대화에 적힌 경로를 실제 경로로: ~, /c/Users/..(Git Bash), /mnt/c/..(WSL), 슬래시, 상대 경로(대화 폴더 기준)를 풀어 준다."""
+        if not p:
+            return ""
+        p = os.path.expandvars(os.path.expanduser(str(p).strip().strip('"')))
+        m = re.match(r"^/(?:mnt/)?([a-zA-Z])/(.*)$", p)
+        if m and os.name == "nt":
+            p = m.group(1).upper() + ":\\" + m.group(2)
+        if os.name == "nt":
+            p = p.replace("/", "\\")
+        if not os.path.isabs(p):
+            try:
+                base = self._cwd_of(self._cur_path) or ""
+            except Exception:
+                base = ""
+            p = os.path.join(base, p) if base else p
+        return os.path.normpath(p)
+
+    def _fp(self, idx):
+        return self._resolve(core.file_path_of(self._cur["files"][idx]))
+
+    def tool_copy(self, cat, idx):
+        """대화 속 도구 칩 하나의 복사용 글: 명령은 전체 명령, 파일은 경로, 그 밖은 요약."""
+        try:
+            t = self._cur[cat][idx]
+        except (TypeError, KeyError, IndexError):
+            return ""
+        i = t["input"]
+        if t["name"] in core.CMD_TOOLS:
+            return str(i.get("command") or "")
+        if t["name"] in core.FILE_TOOLS:
+            return core.file_path_of(t)
+        return core.tool_summary(t)
+
+    # ---------- 터미널(cmd 창처럼): 대화 폴더에서 명령을 바로 실행 ----------
+    def term_cwd(self, hint=""):
+        hint = hint or ""
+        if getattr(self, "_term_hint", None) != hint:
+            self._term_hint = hint
+            self._term_cwd = hint if hint and os.path.isdir(hint) else str(Path.home())
+        return self._term_cwd
+
+    def term_run(self, cmd, hint=""):
+        cwd = self.term_cwd(hint)
+        cmd = (cmd or "").strip()
+        if not cmd:
+            return {"ok": False, "error": ""}
+        if self._term and self._term["proc"].poll() is None:
+            return {"ok": False, "error": "아직 실행 중인 명령이 있습니다 (Ctrl+C 로 멈춥니다)"}
+        m = re.match(r"^cd(?:\s+/d)?(?:\s+(.*))?$", cmd, re.I)
+        if m:   # cd 는 이 창 안에서만 폴더를 바꾼다
+            arg = (m.group(1) or "").strip().strip('"')
+            if not arg:
+                return {"ok": True, "done": True, "text": cwd + "\n"}
+            tgt = os.path.normpath(os.path.join(cwd, os.path.expanduser(arg)))
+            if os.path.isdir(tgt):
+                self._term_cwd = tgt
+                return {"ok": True, "done": True, "text": ""}
+            return {"ok": True, "done": True, "text": "지정된 경로를 찾을 수 없습니다.\n"}
+        import codecs
+        enc = "utf-8"
+        if os.name == "nt":
+            try:
+                import ctypes
+                enc = "cp%d" % ctypes.windll.kernel32.GetOEMCP()
+            except Exception:
+                enc = "cp949"
+        try:
+            proc = subprocess.Popen('cmd.exe /d /s /c "' + cmd + '"', cwd=cwd, stdin=subprocess.DEVNULL,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        except OSError as e:
+            return {"ok": False, "error": "실행하지 못했습니다 (" + str(e)[:80] + ")"}
+        st = {"proc": proc, "text": "", "lock": threading.Lock()}
+        self._term = st
+        ansi = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+
+        def pump():
+            dec = codecs.getincrementaldecoder(enc)(errors="replace")
+            try:
+                while True:
+                    b = proc.stdout.read1(4096)
+                    if not b:
+                        break
+                    t = ansi.sub("", dec.decode(b))
+                    with st["lock"]:
+                        if len(st["text"]) < 600_000:
+                            st["text"] += t
+                with st["lock"]:
+                    st["text"] += ansi.sub("", dec.decode(b"", final=True))
+            except (OSError, ValueError):
+                pass
+            proc.wait()
+            with st["lock"]:
+                st["eof"] = True
+        threading.Thread(target=pump, daemon=True).start()
+        return {"ok": True, "done": False}
+
+    def term_poll(self, pos):
+        st = self._term
+        if not st:
+            return {"text": "", "pos": 0, "done": True, "code": 0}
+        with st["lock"]:
+            text, n, done = st["text"][pos:], len(st["text"]), st.get("eof", False)
+        return {"text": text, "pos": n, "done": done, "code": st["proc"].returncode if done else None}
+
+    def term_stop(self):
+        st = self._term
+        if st and st["proc"].poll() is None:
+            try:
+                subprocess.run(["taskkill", "/PID", str(st["proc"].pid), "/T", "/F"], capture_output=True,
+                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), timeout=10)
+            except (OSError, subprocess.SubprocessError):
+                st["proc"].kill()
+        return True
 
     def detail(self, cat, idx):
         t = self._cur[cat][idx]
@@ -1113,7 +1232,7 @@ class Api:
     def preview_file(self, idx):
         """파일 탭 미리보기. 대화에 나온 파일만, 읽기 전용으로, 크기를 제한해서 보여 준다."""
         try:
-            p = core.file_path_of(self._cur["files"][idx])
+            p = self._fp(idx)
         except (TypeError, KeyError, IndexError, AttributeError):
             return {"ok": False, "error": "파일을 찾지 못했습니다"}
         if not p or not os.path.isfile(p):
@@ -1121,7 +1240,7 @@ class Api:
         ext = os.path.splitext(p)[1].lower()
         size = os.path.getsize(p)
         img = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
-               ".webp": "image/webp", ".bmp": "image/bmp", ".ico": "image/x-icon", ".svg": "image/svg+xml"}
+               ".webp": "image/webp", ".bmp": "image/bmp", ".avif": "image/avif", ".jfif": "image/jpeg", ".ico": "image/x-icon", ".svg": "image/svg+xml"}
         try:
             if ext in img:
                 if size > 8 * 1024 * 1024:
@@ -1150,7 +1269,7 @@ class Api:
                     return {"ok": True, "kind": "pdf", "name": os.path.basename(p),
                             "b64": base64.b64encode(f.read()).decode("ascii")}
             with open(p, "rb") as f:
-                raw = f.read(300 * 1024)
+                raw = f.read((2 * 1024 * 1024) if ext in (".html", ".htm") else 300 * 1024)
         except OSError as e:
             return {"ok": False, "error": "파일을 읽지 못했습니다 (" + str(e)[:60] + ")"}
         if b"\0" in raw[:4096]:
@@ -1162,9 +1281,14 @@ class Api:
     def edit_open(self, idx):
         """파일 탭의 글자 파일을 옆 편집 창으로 연다. 대화에 나온 파일만, 글자 파일만, 2MB까지."""
         try:
-            p = core.file_path_of(self._cur["files"][idx])
+            p = self._fp(idx)
         except (TypeError, KeyError, IndexError, AttributeError):
             return {"ok": False, "error": "파일을 찾지 못했습니다"}
+        if not p or not os.path.isfile(p):
+            return {"ok": False, "error": "현재 이 경로에 파일이 없습니다"}
+        return self._edit_read(p)
+
+    def _edit_read(self, p):
         if not p or not os.path.isfile(p):
             return {"ok": False, "error": "현재 이 경로에 파일이 없습니다"}
         ext = os.path.splitext(p)[1].lower()
@@ -1194,6 +1318,13 @@ class Api:
         self._edit_paths[os.path.normcase(os.path.abspath(p))] = p
         return {"ok": True, "path": p, "name": os.path.basename(p), "text": text.replace("\r\n", "\n"),
                 "enc": enc, "eol": eol, "mtime": str(mt), "lang": PV_LANGS.get(ext, "")}
+
+    def edit_reload(self, path):
+        """편집 창으로 이미 연 파일을 디스크의 현재 내용으로 다시 읽는다."""
+        p = self._edit_paths.get(os.path.normcase(os.path.abspath(str(path))))
+        if not p:
+            return {"ok": False, "error": "편집 창으로 연 파일이 아닙니다"}
+        return self._edit_read(p)
 
     def edit_save(self, path, text, base_mtime, enc, eol, force=False):
         """편집 창의 내용을 저장한다. edit_open 으로 연 파일만. 디스크에서 그 사이 바뀌었으면 덮어쓰지 않고 알린다."""
@@ -1225,7 +1356,7 @@ class Api:
             return {"ok": False, "error": "저장하지 못했습니다 (" + str(e)[:60] + ")"}
 
     def open_path(self, idx, folder):
-        p = core.file_path_of(self._cur["files"][idx])
+        p = self._fp(idx)
         if not os.path.exists(p):
             return False
         if folder:

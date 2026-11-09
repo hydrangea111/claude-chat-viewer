@@ -287,9 +287,9 @@ section.on{display:flex}
 #xmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:13;min-width:170px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
 #xmenu button{display:flex;width:100%;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:8px 12px;border-radius:8px;cursor:pointer;text-align:left}
 #xmenu button:hover{background:var(--chip);color:var(--accent)}
-#bOpts{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 12px;font-size:11.5px;font-weight:600;cursor:pointer}
-#bOpts:hover{color:var(--text);border-color:var(--accent)}
-#bOpts.has{background:var(--accent);border-color:var(--accent);color:#fff}
+#bOpts,#bTerm{border:1px solid var(--line);background:var(--chip);color:var(--dim);border-radius:20px;padding:2px 12px;font-size:11.5px;font-weight:600;cursor:pointer}
+#bOpts:hover,#bTerm:hover{color:var(--text);border-color:var(--accent)}
+#bTerm.has,#bOpts.has{background:var(--accent);border-color:var(--accent);color:#fff}
 #omenu{position:absolute;bottom:calc(100% + 6px);z-index:12;min-width:210px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:5px}
 #omenu button{display:flex;width:100%;justify-content:flex-start;border:0;background:transparent;color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
 #omenu button:hover{background:var(--chip);color:var(--text)}
@@ -386,11 +386,24 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
 #edLn{margin:0;padding:10px 8px 24px 10px;overflow:hidden;text-align:right;color:var(--dim);user-select:none;white-space:pre;font:13px/1.55 Consolas,"D2Coding","Malgun Gothic",monospace;border-right:1px solid var(--line);min-width:2.6em}
 #edTa{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;color:var(--text);font:13px/1.55 Consolas,"D2Coding","Malgun Gothic",monospace;white-space:pre;overflow:auto;tab-size:4;padding:10px 12px 24px;margin:0}
 .edst{display:flex;gap:14px;padding:4px 12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim)}.edst .sp{flex:1}
+
+.chip .chcp{margin-left:auto;border:1px solid var(--line);background:var(--panel);color:var(--dim);font:inherit;font-size:11px;padding:0 8px;border-radius:7px;cursor:pointer;flex-shrink:0}
+.chip .chcp:hover{color:var(--accent);border-color:var(--accent)}.chip .chcp+.go{margin-left:0}
+.edtabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--side);flex-shrink:0}.edtabs:empty{display:none}
+.edtab{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-right:1px solid var(--line);cursor:pointer;font-size:12.5px;max-width:190px;flex-shrink:0;color:var(--dim);user-select:none}
+.edtab.on{background:var(--code);color:var(--text);box-shadow:inset 0 -2px var(--accent)}
+.edtab .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.edtab .td{display:none;width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}.edtab.dirty .td{display:inline-block}
+.edtab .tx{border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;line-height:1;padding:1px 5px;border-radius:5px}.edtab .tx:hover{background:var(--line)}
+#term{flex-shrink:0;display:flex;flex-direction:column;border-top:1px solid var(--line);background:var(--code);max-height:42%}#term[hidden]{display:none}
+.tmh{white-space:nowrap;display:flex;align-items:center;gap:10px;padding:4px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)}.tmh b{color:var(--text)}.tmh .sp{flex:1}.tmh .hint{overflow:hidden;text-overflow:ellipsis;min-width:0}.tmh .btn{flex-shrink:0}
+#tmOut{margin:0;padding:8px 14px;overflow:auto;flex:1;min-height:60px;max-height:260px;font:12.5px/1.5 Consolas,"D2Coding","Malgun Gothic",monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.tmin{display:flex;align-items:center;gap:8px;padding:6px 14px 8px;font:12.5px Consolas,"D2Coding",monospace}.tmin .pr{color:var(--accent);white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis;direction:rtl}
+#tmIn{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
 </style>
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v5.9</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v6.0</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -433,7 +446,9 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
   <section id="files" class="split"></section>
   <section id="cmds" class="split"></section>
   <section id="others" class="split"></section>
-  <div class="composer" id="composer">
+  <div id="term" hidden><div class="tmh"><b>터미널</b><span id="tmCwd"></span><span class="sp"></span><span class="hint">Enter 실행 · ↑↓ 이전 명령 · Ctrl+C 멈춤 · Ctrl+` 입력창 전환</span><button class="btn sm" id="tmClear" type="button">지우기</button><button class="btn sm" id="tmX" type="button">닫기</button></div>
+<pre id="tmOut"></pre><div class="tmin"><span class="pr" id="tmPr">&gt;</span><input id="tmIn" autocomplete="off" spellcheck="false" placeholder="명령을 입력하십시오 (예: git status)"></div></div>
+<div class="composer" id="composer">
     <div class="cbox" id="cbox">
       <div class="cattach">
         <button class="btn sm" id="bAttach" title="Claude가 읽을 파일을 골라 경로를 입력창에 넣습니다"><svg class="icon" viewBox="0 0 24 24"><path d="m21 11-9 9a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/></svg>파일 주소 넣기</button>
@@ -443,7 +458,7 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
         <button data-m="read" class="on" title="파일 읽기·검색만 허용">읽기만</button>
         <button data-m="edit" title="파일 수정까지 허용">파일 수정</button>
         <button data-m="all" title="명령 실행까지 전부 허용 (주의)">모두 허용</button>
-      </div><span class="sp"></span><button id="bOpts" title="웹 검색 · 브라우저 · 대화 모드 · 읽어 주기">옵션 ▾</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div><div id="omenu" hidden><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bTalk" title="대화 모드: 말풍선을 크게, 도구 작업은 접어 두고, 아래에 음성 상태 표시를 보여 줍니다">💬 대화 모드 꺼짐</button><button id="bTts" title="켜면 Claude의 답이 끝날 때 소리 내어 읽어 줍니다 (Esc로 멈춤)">🔊 읽어 주기 꺼짐</button></div></div>
+      </div><span class="sp"></span><button id="bTerm" title="터미널 열기/닫기 (Ctrl+`)">터미널</button><button id="bOpts" title="웹 검색 · 브라우저 · 대화 모드 · 읽어 주기">옵션 ▾</button><button id="bEffort" title="Claude가 얼마나 깊게 생각할지 고릅니다. 높을수록 신중하지만 느리고 사용량이 늡니다">생각 깊이: 기본 ▾</button><button id="bModel" title="이 대화에서 쓸 모델을 고릅니다">모델: 기본 ▾</button><div id="mmenu" hidden></div><div id="omenu" hidden><button id="bWeb" title="켜면 Claude가 인터넷에서 검색하고 웹 페이지를 읽어 올 수 있습니다">🔎 웹 검색 꺼짐</button><button id="bChrome" title="켜면 Claude가 내 Chrome을 직접 열고 확인·조작할 수 있습니다 (기본은 꺼짐)">🌐 브라우저 꺼짐</button><button id="bTalk" title="대화 모드: 말풍선을 크게, 도구 작업은 접어 두고, 아래에 음성 상태 표시를 보여 줍니다">💬 대화 모드 꺼짐</button><button id="bTts" title="켜면 Claude의 답이 끝날 때 소리 내어 읽어 줍니다 (Esc로 멈춤)">🔊 읽어 주기 꺼짐</button></div></div>
       <div id="slash" hidden></div>
       <div id="vbar" hidden><div class="orb" id="orb" data-s="idle"></div><div class="vtxt"><b id="vstate">대기 중</b><span id="vsub"></span></div><button class="btn" id="vShut" hidden>읽기 멈춤</button><button class="btn primary" id="vMic">🎙 켜기</button></div>
       <div class="crow">
@@ -461,11 +476,12 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
   </div>
 </main>
 <div id="erz" title="끌어서 편집 창 크기 조절"></div>
-<section id="ed" aria-label="코드 편집 창"><div class="edh"><span class="dot" id="edDot" title="저장하지 않은 수정이 있습니다"></span><div class="nm"><b id="edName"></b><small id="edPath"></small></div><button class="btn sm primary" id="edSave" type="button" title="저장 (Ctrl+S)">저장</button><button class="btn sm" id="edReload" type="button" title="디스크의 현재 내용으로 다시 불러옵니다">다시 불러오기</button><button class="btn sm" id="edClose" type="button" title="편집 창 닫기">닫기</button></div>
+<section id="ed" aria-label="코드 편집 창"><div class="edh"><span class="dot" id="edDot" title="저장하지 않은 수정이 있습니다"></span><div class="nm"><b id="edName"></b><small id="edPath"></small></div><button class="btn sm primary" id="edSave" type="button" title="저장 (Ctrl+S)">저장</button><button class="btn sm" id="edReload" type="button" title="디스크의 현재 내용으로 다시 불러옵니다">다시 불러오기</button><button class="btn sm" id="edClose" type="button" title="편집 창 전체 닫기">창 닫기</button></div>
+<div class="edtabs" id="edTabs"></div>
 <div class="edwrap"><pre id="edLn">1</pre><textarea id="edTa" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea></div>
 <div class="edst"><span id="edPos">줄 1, 칸 1</span><span id="edInfo"></span><span class="sp"></span><span id="edMsg">Ctrl+S 로 저장</span></div></section>
 
-<div class="pvm" id="pvm" hidden><div class="pvb" role="dialog" aria-modal="true"><div class="pvh"><b id="pvT"></b><button class="btn sm" id="pvX" type="button">닫기</button></div><div class="pvnote" id="pvN" hidden></div><div class="pvbody" id="pvC"></div></div></div>
+<div class="pvm" id="pvm" hidden><div class="pvb" role="dialog" aria-modal="true"><div class="pvh"><b id="pvT"></b><button class="btn sm" id="pvNet" type="button" hidden title="이 HTML이 CDN 같은 https 주소에서 자료를 불러오게 합니다">인터넷 자료 허용하기</button><button class="btn sm" id="pvX" type="button">닫기</button></div><div class="pvnote" id="pvN" hidden></div><div class="pvbody" id="pvC"></div></div></div>
 <div class="modal" id="modal" hidden><div class="mbox" role="dialog" aria-modal="true">
   <h3 id="mT"></h3><p id="mB"></p><input id="mIn" hidden maxlength="80" autocomplete="off" spellcheck="false">
   <label id="mSkipL" class="skipl" hidden><input type="checkbox" id="mSkip"><span>다음부터 이 확인창 보지 않기</span></label>
@@ -607,7 +623,7 @@ function mdSplit(s){
   if(last<s.length)out.push({t:s.slice(last)});return out}
 function md(s){
   return mdSplit(s).map(g=>{
-    if(g.code){const lg=g.lang,pv=['html','htm','svg','md','markdown'].includes(lg),big=!pv&&CODE_LANGS.has(lg);return '<div class="codebox"><span class="cpbar">'+(big?'<button class="pvcode" type="button" data-lang="'+lg+'" title="줄 번호와 함께 크게 봅니다">크게 보기</button>':'')+(pv?'<button class="pvcode" type="button" data-lang="'+lg+'" title="이 코드를 화면으로 미리 봅니다">미리보기</button>':'')+'<button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button></span><pre><code>'+esc(g.t)+'</code></pre></div>'}
+    if(g.code){let lg=g.lang;if(!lg||lg==='text'||lg==='txt'){if(/^\s*(?:<!doctype html|<html[\s>])/i.test(g.t))lg='html';else if(/^\s*(?:<\?xml[^>]*>\s*)?<svg[\s>]/i.test(g.t))lg='svg'}const pv=['html','htm','svg','md','markdown'].includes(lg),big=!pv&&CODE_LANGS.has(lg);return '<div class="codebox"><span class="cpbar">'+(big?'<button class="pvcode" type="button" data-lang="'+lg+'" title="줄 번호와 함께 크게 봅니다">크게 보기</button>':'')+(pv?'<button class="pvcode" type="button" data-lang="'+lg+'" title="이 코드를 화면으로 미리 봅니다">미리보기</button>':'')+'<button class="cpcode" type="button" title="이 코드 상자만 복사">복사</button></span><pre><code>'+esc(g.t)+'</code></pre></div>'}
     return esc(g.t).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>')
   }).join('').replace(/<\/pre><\/div>\n/g,'</pre></div>');
 }
@@ -744,7 +760,7 @@ function renderChat(live){
       else if(p.k==='sys')pushChip(`<div class="chip think"><div class="h"><span class="nm">시스템 안내</span><span class="sm">${esc(p.t.slice(0,80))}</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`);
       else if(p.k==='compact')pushChip(`<div class="chip think"><div class="h"><span class="nm">대화 압축</span><span class="sm">이전 내용을 요약해 이어 갑니다</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`);
       else if(p.k==='thinking')pushChip(`<div class="chip think"><div class="h"><span class="nm">생각</span><span class="sm">${esc(p.t.slice(0,80))}</span><span class="go">펼치기</span></div><pre hidden>${esc(p.t)}</pre></div>`);
-      else pushChip(`<div class="chip${p.err?' err':''}" data-cat="${p.cat}" data-idx="${p.idx}"><div class="h"><span class="nm">${esc(p.name)}</span><span class="sm">${esc(p.sum)}</span><span class="go">펼치기</span></div></div>`);
+      else pushChip(`<div class="chip${p.err?' err':''}" data-cat="${p.cat}" data-idx="${p.idx}"><div class="h"><span class="nm">${esc(p.name)}</span><span class="sm">${esc(p.sum)}</span><button class="chcp" type="button" title="이 명령(또는 경로)만 복사">복사</button><span class="go">펼치기</span></div></div>`);
     }
     flush();
     if(msgQs.length){choiceMap[mi]=msgQs;inner+=choiceHtml(msgQs,mi,canAnswer&&mi===data.msgs.length-1)}
@@ -759,6 +775,9 @@ function renderChat(live){
   el.scrollTop=live?(atBottom?el.scrollHeight:keep):el.scrollHeight;   // 대화를 열면 가장 최근 메시지가 보이게(맨 아래)
 }
 $('#chat').onclick=async e=>{
+  const cc=e.target.closest('.chcp');
+  if(cc){const c=cc.closest('.chip');const t=await api_().tool_copy(c.dataset.cat,+c.dataset.idx);
+    if(t&&await copyText(t)){cc.textContent='복사됨';setTimeout(()=>{cc.textContent='복사'},1200)}else toast('복사하지 못했습니다');return}
   const pvb=e.target.closest('.pvcode');
   if(pvb){const pre=pvb.closest('.codebox').querySelector('pre');previewCode(pvb.dataset.lang,pre?pre.textContent:'');return}
   const cpb=e.target.closest('.cpcode');
@@ -811,15 +830,29 @@ async function pick(k,i){
     $('#bEdit').onclick=()=>edOpen(i);
     $('#bPrev').onclick=async()=>{const r2=await api_().preview_file(i);if(!r2||!r2.ok)return toast((r2&&r2.error)||'미리볼 수 없습니다');
       const note=(r2.kind==='html'?PV_NOTE+' ':'')+(r2.lang?r2.lang+(r2.lang.indexOf('글자만')>=0?'. ':' 파일입니다. '):'')+(r2.truncated?'파일이 커서 앞부분만 보여 줍니다. ':'');
-      openPv(r2.name,pvBody(r2),note.trim())};
+      if(r2.kind==='html')openHtmlPv(r2.name,r2.text,note.trim());else openPv(r2.name,pvBody(r2),note.trim())};
   }
 }
 
 
 /* ---- 미리보기: 코드 상자(html·svg·md)와 파일 탭의 파일을 화면으로 본다. 미리보기 안의 글은 인터넷에 접속하지 못한다 ---- */
-const PV_CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:\">";
+const pvCsp=net=>"<meta http-equiv=\"Content-Security-Policy\" content=\""+(net?"default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https:; style-src 'unsafe-inline' https:; img-src data: blob: https:; font-src data: https:; media-src data: blob: https:; connect-src https:":"default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:")+"\">";
+/* 샌드박스 안에서는 localStorage·sessionStorage·cookie 에 접근하면 오류가 나서 화면이 통째로 비는 페이지가 많다 → 메모리로 대신하는 장치를 먼저 깐다 */
+const PV_SHIM="<script>(function(){function mk(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}try{window.localStorage;window.sessionStorage}catch(e){try{Object.defineProperty(window,'localStorage',{value:mk()});Object.defineProperty(window,'sessionStorage',{value:mk()})}catch(e2){}}try{document.cookie}catch(e){try{var c='';Object.defineProperty(document,'cookie',{get:function(){return c},set:function(v){c=String(v)}})}catch(e2){}}})()<\/script>";
+/* 문서 맨 앞에 끼우면 <!DOCTYPE> 앞이라 호환 모드가 되어 모양이 깨진다 → <head> 바로 뒤(없으면 <html> 뒤, doctype 뒤)에 넣는다 */
+function pvInject(code,extra){
+  let m=/<head(?:\s[^>]*)?>/i.exec(code);if(m)return code.slice(0,m.index+m[0].length)+extra+code.slice(m.index+m[0].length);
+  m=/<html(?:\s[^>]*)?>/i.exec(code);if(m)return code.slice(0,m.index+m[0].length)+extra+code.slice(m.index+m[0].length);
+  m=/^\s*<!doctype[^>]*>/i.exec(code);if(m)return code.slice(0,m[0].length)+extra+code.slice(m[0].length);
+  return extra+code}
 const escA=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-function pvHtml(code){return '<iframe sandbox="allow-scripts" srcdoc="'+escA(PV_CSP+code)+'"></iframe>'}
+function pvHtml(code,net){return '<iframe sandbox="allow-scripts" srcdoc="'+escA(pvInject(code,pvCsp(net)+PV_SHIM))+'"></iframe>'}
+let pvCode=null,pvNetOn=false;
+function openHtmlPv(title,code,note){pvCode=code;pvNetOn=false;openPv(title,pvHtml(code,false),note);$('#pvNet').hidden=false;$('#pvNet').textContent='인터넷 자료 허용하기'}
+$('#pvNet').onclick=async()=>{if(pvCode===null)return;
+  if(!pvNetOn){if(!await ask('인터넷 자료를 허용하시겠습니까?','이 HTML이 https 주소에서 스크립트·이미지·글꼴(CDN 등)을 불러오도록 허용합니다. 내가 만들었거나 믿을 수 있는 코드일 때만 쓰십시오.\n(같은 폴더의 다른 파일은 여전히 불러오지 않습니다)','허용하고 다시 보기'))return;pvNetOn=true}else pvNetOn=false;
+  $('#pvC').innerHTML=pvHtml(pvCode,pvNetOn);$('#pvNet').textContent=pvNetOn?'인터넷 자료 막기':'인터넷 자료 허용하기';
+  const n=$('#pvN');n.textContent=pvNetOn?'인터넷 자료를 허용한 상태입니다. 이 코드가 인터넷에 접속할 수 있습니다.':PV_NOTE;n.hidden=false};
 let pvBlob=null;
 function pvBody(r){
   if(r.kind==='image')return '<div class="pvimg"><img alt="" src="'+escA(r.src)+'"></div>';
@@ -828,49 +861,74 @@ function pvBody(r){
   if(r.kind==='md')return '<div class="pvmd">'+md(r.text)+'</div>';
   return '<div class="code">'+r.text.split(String.fromCharCode(13)).join('').split(String.fromCharCode(10)).map((l,i)=>'<div><span class="ln">'+(i+1)+'</span>'+(esc(l)||' ')+'</div>').join('')+'</div>'}
 function openPv(title,bodyHtml,note){
-  $('#pvT').textContent=title;$('#pvC').innerHTML=bodyHtml;
+  $('#pvNet').hidden=true;$('#pvT').textContent=title;$('#pvC').innerHTML=bodyHtml;
   const n=$('#pvN');n.textContent=note||'';n.hidden=!note;$('#pvm').hidden=false;$('#pvC').scrollTop=0}
-function closePv(){$('#pvm').hidden=true;$('#pvC').innerHTML='';if(pvBlob){URL.revokeObjectURL(pvBlob);pvBlob=null}}
+function closePv(){pvCode=null;pvNetOn=false;$('#pvm').hidden=true;$('#pvC').innerHTML='';if(pvBlob){URL.revokeObjectURL(pvBlob);pvBlob=null}}
 $('#pvX').onclick=closePv;$('#pvm').addEventListener('mousedown',e=>{if(e.target.id==='pvm')closePv()});
 const PV_NOTE='미리보기 안에서는 인터넷에 접속하지 않고, 같은 폴더의 다른 파일도 불러오지 않습니다. 실제와 다르게 보일 수 있습니다.';
 function previewCode(lang,code){
   if(lang==='svg')return openPv('SVG 미리보기','<div class="pvimg"><img alt="" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(code)+'"></div>');
   if(lang==='md'||lang==='markdown')return openPv('마크다운 미리보기','<div class="pvmd">'+md(code)+'</div>');
-  if(lang==='html'||lang==='htm')return openPv('HTML 미리보기',pvHtml(code),PV_NOTE);
+  if(lang==='html'||lang==='htm')return openHtmlPv('HTML 미리보기',code,PV_NOTE);
   openPv(lang+' 코드',pvBody({kind:'text',text:code}))}
 
 
-/* ---- 편집 창: 파일 탭의 글자 파일을 대화창 옆에 띄워 고치고 저장한다 (대화에 나온 파일만, 2MB까지) ---- */
-let ed=null,edSbWas=0;   // {idx,path,enc,eol,mtime,orig,tab}
-const edDirty=()=>!!ed&&$('#edTa').value!==ed.orig;
+/* ---- 편집 창: 파일 탭의 글자 파일을 대화창 옆에 띄워 고치고 저장한다. 탭으로 여러 파일을 동시에 연다 (대화에 나온 파일만, 2MB까지) ---- */
+let eds=[],edA=-1,edSbWas=0;
+const edT=()=>eds[edA]||null;
+const tDirty=t=>!!t&&t.cur!==t.orig;
+const anyDirty=()=>eds.some(tDirty);
+function edSync(){const t=edT();if(!t)return;const ta=$('#edTa');t.cur=ta.value;t.sy=ta.scrollTop;t.sx=ta.scrollLeft;t.ss=ta.selectionStart;t.se=ta.selectionEnd}
 function edLines(){const n=$('#edTa').value.split('\n').length;let s='';for(let i=1;i<=n;i++)s+=i+'\n';$('#edLn').textContent=s.slice(0,-1)}
-function edStat(){const t=$('#edTa'),v=t.value,p=t.selectionStart,before=v.slice(0,p),ln=before.split('\n').length,col=p-before.lastIndexOf('\n');
-  $('#edPos').textContent='줄 '+ln+', 칸 '+col;$('#edDot').classList.toggle('on',edDirty());
-  $('#edMsg').textContent=edDirty()?'수정됨 · Ctrl+S 로 저장':'저장됨'}
-function edShow(r,idx){
-  ed={idx,path:r.path,enc:r.enc,eol:r.eol,mtime:r.mtime,orig:r.text,tab:/(^|\n)\t/.test(r.text)&&!/(^|\n) {2}/.test(r.text)};
-  $('#edName').textContent=r.name;$('#edPath').textContent=r.path;$('#edPath').title=r.path;
-  const t=$('#edTa');t.value=r.text;edLines();t.scrollTop=0;t.scrollLeft=0;$('#edLn').scrollTop=0;
-  $('#edInfo').textContent=(r.lang?r.lang+' · ':'')+({'utf-8':'UTF-8','utf-8-sig':'UTF-8(BOM)','cp949':'CP949'})[r.enc]+' · '+(r.eol==='\r\n'?'CRLF':'LF');
-  if(!document.body.classList.contains('edon')&&sbW>0&&innerWidth<1500){edSbWas=sbW;setSb(0,false)}   // 창이 좁으면 대화창이 눌리지 않게 사이드바를 접는다
-  document.body.classList.add('edon');edStat();t.focus()}
+function edTabs(){$('#edTabs').innerHTML=eds.map((t,i)=>`<div class="edtab${i===edA?' on':''}${tDirty(t)?' dirty':''}" data-i="${i}" title="${esc(t.path)}"><span class="tn">${esc(t.name)}</span><i class="td"></i><button class="tx" type="button" data-x="${i}" title="이 탭 닫기 (Ctrl+W)">×</button></div>`).join('')}
+function edStat(){const t=edT();if(!t)return;const ta=$('#edTa');t.cur=ta.value;
+  const v=ta.value,p=ta.selectionStart,before=v.slice(0,p),ln=before.split('\n').length,col=p-before.lastIndexOf('\n');
+  $('#edPos').textContent='줄 '+ln+', 칸 '+col;$('#edDot').classList.toggle('on',tDirty(t));
+  const tb=$('#edTabs').children[edA];if(tb)tb.classList.toggle('dirty',tDirty(t));
+  $('#edMsg').textContent=tDirty(t)?'수정됨 · Ctrl+S 로 저장':'저장됨'}
+function edLoad(){const t=edT(),ta=$('#edTa');if(!t)return;
+  $('#edName').textContent=t.name;$('#edPath').textContent=t.path;$('#edPath').title=t.path;
+  $('#edInfo').textContent=(t.lang?t.lang+' · ':'')+({'utf-8':'UTF-8','utf-8-sig':'UTF-8(BOM)','cp949':'CP949'})[t.enc]+' · '+(t.eol==='\r\n'?'CRLF':'LF');
+  ta.value=t.cur;edLines();ta.scrollTop=t.sy||0;ta.scrollLeft=t.sx||0;$('#edLn').scrollTop=ta.scrollTop;
+  try{ta.setSelectionRange(t.ss||0,t.se||0)}catch(e){}
+  edTabs();edStat()}
+function edSwitch(i){if(i===edA||!eds[i])return;edSync();edA=i;edLoad();$('#edTa').focus()}
+function edNew(r){return {path:r.path,name:r.name,enc:r.enc,eol:r.eol,mtime:r.mtime,orig:r.text,cur:r.text,lang:r.lang,tab:/(^|\n)\t/.test(r.text)&&!/(^|\n) {2}/.test(r.text),sy:0,sx:0,ss:0,se:0}}
 async function edOpen(idx){
-  if(edDirty()&&!await ask('저장하지 않은 수정이 있습니다','지금 열린 파일의 수정 내용이 사라집니다. 다른 파일을 여시겠습니까?','버리고 열기',true))return;
   const r=await api_().edit_open(idx);if(!r||!r.ok)return toast((r&&r.error)||'편집 창으로 열 수 없습니다');
-  edShow(r,idx)}
-async function edSave(force){
-  if(!ed)return;const t=$('#edTa').value;
-  const r=await api_().edit_save(ed.path,t,ed.mtime,ed.enc,ed.eol,!!force);
-  if(r&&r.conflict){if(await ask('디스크의 파일이 바뀌었습니다','열어 둔 뒤에 Claude나 다른 프로그램이 이 파일을 바꿨습니다.\n내 수정 내용으로 덮어쓰시겠습니까?','덮어쓰기',true))return edSave(true);return}
+  edSync();
+  const k=eds.findIndex(t=>t.path.toLowerCase()===r.path.toLowerCase());
+  if(k>=0)edA=k;                       // 이미 열려 있으면 그 탭으로 (고치던 내용은 그대로)
+  else{eds.push(edNew(r));edA=eds.length-1}
+  if(!document.body.classList.contains('edon')){
+    if(sbW>0&&innerWidth<1500){edSbWas=sbW;setSb(0,false)}   // 창이 좁으면 대화창이 눌리지 않게 사이드바를 접는다
+    document.body.classList.add('edon')}
+  edLoad();$('#edTa').focus()}
+async function edSave(force,tab){
+  const t=tab||edT();if(!t)return;if(t===edT())edSync();const text=t.cur;
+  const r=await api_().edit_save(t.path,text,t.mtime,t.enc,t.eol,!!force);
+  if(r&&r.conflict){if(await ask('디스크의 파일이 바뀌었습니다',t.name+'\n열어 둔 뒤에 Claude나 다른 프로그램이 이 파일을 바꿨습니다.\n내 수정 내용으로 덮어쓰시겠습니까?','덮어쓰기',true))return edSave(true,t);return}
   if(!r||!r.ok)return toast((r&&r.error)||'저장하지 못했습니다');
-  ed.orig=t;ed.mtime=r.mtime;edStat();toast('저장했습니다')}
-async function edClose(){
-  if(edDirty()&&!await ask('저장하지 않은 수정이 있습니다','편집 창을 닫으면 수정 내용이 사라집니다. 닫으시겠습니까?','버리고 닫기',true))return;
-  ed=null;document.body.classList.remove('edon');$('#edTa').value='';if(edSbWas&&sbW===0)setSb(edSbWas,false);edSbWas=0}
-$('#edSave').onclick=()=>edSave(false);$('#edClose').onclick=edClose;
-$('#edReload').onclick=async()=>{if(!ed)return;
-  if(edDirty()&&!await ask('수정 내용을 버리겠습니까?','디스크의 현재 내용으로 다시 불러오면 지금까지의 수정이 사라집니다.','다시 불러오기',true))return;
-  const r=await api_().edit_open(ed.idx);if(!r||!r.ok)return toast((r&&r.error)||'다시 불러오지 못했습니다');edShow(r,ed.idx)};
+  t.orig=text;t.mtime=r.mtime;edTabs();edStat();toast('저장했습니다')}
+function edPanelOff(){eds=[];edA=-1;document.body.classList.remove('edon');$('#edTa').value='';$('#edTabs').innerHTML='';if(edSbWas&&sbW===0)setSb(edSbWas,false);edSbWas=0}
+async function edCloseTab(i){
+  const t=eds[i];if(!t)return;if(i===edA)edSync();
+  if(tDirty(t)&&!await ask('저장하지 않은 수정이 있습니다',t.name+'\n탭을 닫으면 수정 내용이 사라집니다. 닫으시겠습니까?','버리고 닫기',true))return;
+  const j=eds.indexOf(t);if(j<0)return;eds.splice(j,1);
+  if(!eds.length)return edPanelOff();
+  if(j<edA)edA--;else if(j===edA)edA=Math.min(j,eds.length-1);
+  edLoad();$('#edTa').focus()}
+async function edCloseAll(){
+  edSync();const n=eds.filter(tDirty).length;
+  if(n&&!await ask('저장하지 않은 수정이 있습니다','수정한 탭 '+n+'개의 내용이 사라집니다. 편집 창을 닫으시겠습니까?','버리고 닫기',true))return;
+  edPanelOff()}
+$('#edSave').onclick=()=>edSave(false);$('#edClose').onclick=edCloseAll;
+$('#edTabs').addEventListener('click',e=>{const x=e.target.closest('.tx');if(x){edCloseTab(+x.dataset.x);return}const t=e.target.closest('.edtab');if(t)edSwitch(+t.dataset.i)});
+$('#edTabs').addEventListener('auxclick',e=>{if(e.button!==1)return;const t=e.target.closest('.edtab');if(t){e.preventDefault();edCloseTab(+t.dataset.i)}});
+$('#edReload').onclick=async()=>{const t=edT();if(!t)return;
+  if(tDirty(t)&&!await ask('수정 내용을 버리겠습니까?','디스크의 현재 내용으로 다시 불러오면 지금까지의 수정이 사라집니다.','다시 불러오기',true))return;
+  const r=await api_().edit_reload(t.path);if(!r||!r.ok)return toast((r&&r.error)||'다시 불러오지 못했습니다');
+  Object.assign(t,edNew(r));edLoad()};
 (function(){const t=$('#edTa');
   t.addEventListener('input',()=>{edLines();edStat()});
   t.addEventListener('scroll',()=>{$('#edLn').scrollTop=t.scrollTop});
@@ -878,25 +936,54 @@ $('#edReload').onclick=async()=>{if(!ed)return;
   const ins=s=>{if(!document.execCommand('insertText',false,s))t.setRangeText(s,t.selectionStart,t.selectionEnd,'end')};
   t.addEventListener('keydown',e=>{
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();edSave(false);return}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='w'){e.preventDefault();edCloseTab(edA);return}
+    if(e.ctrlKey&&e.key==='Tab'){e.preventDefault();if(eds.length>1)edSwitch((edA+(e.shiftKey?eds.length-1:1))%eds.length);return}
     if(e.isComposing)return;
-    const v=t.value,s=t.selectionStart,en=t.selectionEnd,unit=ed&&ed.tab?'\t':'    ';
+    const v=t.value,s=t.selectionStart,en=t.selectionEnd,cur=edT(),unit=cur&&cur.tab?'\t':'    ';
     if(e.key==='Tab'){e.preventDefault();
       if(s===en&&!e.shiftKey){ins(unit);return}
-      // 여러 줄 선택: 줄마다 들여쓰기 / 내어쓰기
       const a=v.lastIndexOf('\n',s-1)+1,seg=v.slice(a,en),out=e.shiftKey?seg.replace(/^(\t| {1,4})/gm,''):seg.replace(/^/gm,unit);
       t.setSelectionRange(a,en);ins(out);t.setSelectionRange(a,a+out.length);return}
-    if(e.key==='Enter'&&!e.shiftKey&&!e.ctrlKey){   // 윗줄의 들여쓰기를 이어 간다
+    if(e.key==='Enter'&&!e.shiftKey&&!e.ctrlKey){
       const a=v.lastIndexOf('\n',s-1)+1,ind=/^[ \t]*/.exec(v.slice(a,s))[0];
       e.preventDefault();ins('\n'+ind)}
   });
-  // 옆 창 크기 조절
   $('#erz').addEventListener('pointerdown',e=>{e.preventDefault();const rz=$('#erz');rz.setPointerCapture(e.pointerId);document.body.classList.add('dragging');
     const mv=ev=>{const w=innerWidth-ev.clientX;document.documentElement.style.setProperty('--ew',Math.max(300,Math.min(innerWidth*.78,w))+'px')};
     const up=()=>{rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up);rz.removeEventListener('pointercancel',up);document.body.classList.remove('dragging')};
     rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up);rz.addEventListener('pointercancel',up)});
-  // 저장 안 한 수정이 있는 채로 창을 닫거나 새로고침하려 하면 한 번 묻는다
-  addEventListener('beforeunload',e=>{if(edDirty()){e.preventDefault();e.returnValue=''}});
+  addEventListener('beforeunload',e=>{edSync();if(anyDirty()){e.preventDefault();e.returnValue=''}});
 })();
+
+
+/* ---- 터미널: cmd 창처럼 대화 폴더에서 명령을 바로 실행한다 (Claude 작업이 끝나면 바로 이어서 칠 수 있다) ---- */
+let tmBusy=false,tmHist=[],tmHi=0,tmTimer=null;
+const tmHint=()=>(typeof workDir!=='undefined'&&workDir)||newCwd||'';
+function tmOut(s){const o=$('#tmOut');o.textContent+=s;if(o.textContent.length>200000)o.textContent=o.textContent.slice(-150000);o.scrollTop=o.scrollHeight}
+async function tmPrompt(){let c='';try{c=await api_().term_cwd(tmHint())}catch(e){}$('#tmPr').textContent=c+'>';$('#tmCwd').textContent='';return c}
+function tmShow(on){const el=$('#term');el.hidden=!on;if(on){tmPrompt();$('#tmIn').focus()}else $('#msg').focus()}
+async function tmRun(cmd){
+  const pr=$('#tmPr').textContent;tmOut(pr+' '+cmd+'\n');
+  if(/^(cls|clear)$/i.test(cmd)){$('#tmOut').textContent='';return}
+  tmBusy=true;let pos=0;
+  const r=await api_().term_run(cmd,tmHint());
+  if(!r||!r.ok){tmBusy=false;tmOut((r&&r.error||'실행하지 못했습니다')+'\n');return}
+  if(r.text)tmOut(r.text);
+  if(r.done){tmBusy=false;tmPrompt();return}
+  const poll=async()=>{const p=await api_().term_poll(pos);if(!p)return;pos=p.pos;if(p.text)tmOut(p.text);
+    if(p.done){tmBusy=false;clearInterval(tmTimer);if(p.code)tmOut('(종료 코드 '+p.code+')\n');tmPrompt();if(!$('#term').hidden)$('#tmIn').focus()}};
+  clearInterval(tmTimer);tmTimer=setInterval(poll,150)}
+$('#tmIn').addEventListener('keydown',async e=>{
+  if(e.isComposing)return;
+  if(e.key==='Enter'){e.preventDefault();const c=e.target.value.trim();if(!c||tmBusy)return;e.target.value='';if(tmHist[tmHist.length-1]!==c)tmHist.push(c);tmHi=tmHist.length;tmRun(c);return}
+  if(e.key==='ArrowUp'){e.preventDefault();if(tmHi>0){tmHi--;e.target.value=tmHist[tmHi]}return}
+  if(e.key==='ArrowDown'){e.preventDefault();if(tmHi<tmHist.length-1){tmHi++;e.target.value=tmHist[tmHi]}else{tmHi=tmHist.length;e.target.value=''}return}
+  if(e.ctrlKey&&e.key.toLowerCase()==='c'&&tmBusy&&getSelection().toString()===''){e.preventDefault();await api_().term_stop();tmOut('^C\n');return}
+  if(e.key==='Escape'){e.preventDefault();$('#msg').focus()}});
+$('#tmX').onclick=()=>tmShow(false);$('#tmClear').onclick=()=>{$('#tmOut').textContent='';$('#tmIn').focus()};$('#bTerm').onclick=()=>tmShow($('#term').hidden);
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&!e.altKey&&(e.key==='`'||e.code==='Backquote')){e.preventDefault();
+    if($('#term').hidden)tmShow(true);else if(document.activeElement===$('#tmIn'))$('#msg').focus();else $('#tmIn').focus()}});
 
 /* ---- 상단 ---- */
 $('#tabs').onclick=e=>{const b=e.target.closest('.tab');if(!b)return;
@@ -1032,7 +1119,7 @@ $('#bSend').onclick=send;
 $('#bStop').onclick=()=>{userStopped=true;api_().stop()};
 document.addEventListener('keydown',e=>{   // Esc: 응답 중에는 중지(창·메뉴·목록이 열려 있으면 그것을 먼저 닫는다)
   if(e.key==='Escape'&&!$('#pvm').hidden){closePv();e.preventDefault();return}
-  if(e.key==='Escape'&&$('#ed').contains(document.activeElement))return;
+  if(e.key==='Escape'&&($('#ed').contains(document.activeElement)||$('#term').contains(document.activeElement)))return;
   if(e.key==='Escape'&&(!$('#omenu').hidden||!$('#xmenu').hidden)){closePops();e.preventDefault();return}
   if(e.key==='Escape'&&!e.isComposing&&!e.defaultPrevented&&speaking){stopSpeech();e.preventDefault();toast('읽기를 멈췄습니다');return}
   if(e.key!=='Escape'||e.isComposing||e.defaultPrevented||!running)return;

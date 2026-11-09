@@ -10,7 +10,7 @@ from pathlib import Path
 PROJECTS = Path.home() / ".claude" / "projects"
 COMPACT_HEAD = "This session is being continued from a previous conversation"
 # 사용자가 쓴 글이 아니라 Claude Code 가 자동으로 붙이는 안내 문구(맨 앞에 붙거나 단독으로 기록된다)
-NOTICE_RE = re.compile(r"^\s*(Your response above was cut off mid-stream\.[^\n]*|\[Request interrupted by user[^\]\n]*\])[ \t]*\n?", re.I)
+NOTICE_RE = re.compile(r"^\s*(Your response above was [^\n]*|\[Image: (?:original|source)[^\]\n]*\]|\[Request interrupted by user[^\]\n]*\])[ \t]*\n?", re.I)
 REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
 # 백그라운드 작업이 끝났을 때 하네스가 사용자 메시지처럼 끼워 넣는 알림. 내가 친 글이 아니므로 Claude Code 쪽 안내로 보여 준다
 TASKNOTE_RE = re.compile(r"<task-notification>(.*?)</task-notification>", re.S)
@@ -25,6 +25,35 @@ def task_notice(body):
     if d.get("summary"):
         head += ": " + d["summary"]
     return head + chr(10) * 2 + body.strip()
+# 내가 친 글이 아니라 Claude Code·하네스가 사용자 메시지 자리에 끼워 넣는 글(통째로 안내로 취급한다)
+INJECT = [
+    (re.compile(r"^\s*\[Image: (?:original|source)[^\]]*\]\s*$"), "이미지 첨부 정보"),
+    (re.compile(r"^\s*<local-command-caveat>"), "로컬 명령 안내"),
+    (re.compile(r"^\s*<local-command-std(?:out|err)>"), "로컬 명령 출력"),
+    (re.compile(r"^\s*<command-name>"), "명령 실행"),
+    (re.compile(r"^\s*Base directory for this skill:"), "스킬 불러옴"),
+    (re.compile(r"^\s*<previous-conversation>"), "이전 대화 요약"),
+    (re.compile(r"^\s*The user hasn't heard from you"), "진행 상황 확인 요청"),
+    (re.compile(r"^\s*Called the [\w\-.]+ tool with the following input"), "도구 호출 기록"),
+    (re.compile(r"^\s*(?:The following (?:tools|deferred tools|MCP servers|skills)|Instruction files were re-read|"
+                r"Attribution for git commits|Definitions of the following tools)"), "시스템 안내"),
+    (re.compile(r"^\s*Note: .{0,200}was read before the last conversation was summarized"), "시스템 안내"),
+]
+_CMD_NAME = re.compile(r"<command-name>\s*(.*?)\s*</command-name>", re.S)
+
+
+def injected(x):
+    """내 말이 아닌 자동 삽입 글이면 (제목, 본문), 아니면 None."""
+    for rx, head in INJECT:
+        if rx.match(x):
+            if head == "명령 실행":
+                m = _CMD_NAME.search(x)
+                if m:
+                    head += ": " + m.group(1)
+            return head + chr(10) * 2 + x.strip()
+    return None
+
+
 FILE_TOOLS = {"Write": "생성", "Edit": "수정", "MultiEdit": "수정", "NotebookEdit": "수정", "Read": "읽기"}
 CMD_TOOLS = {"Bash", "PowerShell"}
 VIEW_LIMIT = 100_000
@@ -136,6 +165,10 @@ def parse(path, with_reminders=False):
                         notice.append(("sys", task_notice(m1.group(1))))
                     x = TASKNOTE_RE.sub("", x).strip()
                     if not x:
+                        continue
+                    inj = injected(x)
+                    if inj:
+                        notice.append(("sys", inj))
                         continue
                 kept.append((k, x))
             parts = kept
