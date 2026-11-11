@@ -406,7 +406,7 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v6.2</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v6.3</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1316,7 +1316,8 @@ $('#helpModal').addEventListener('mousedown',e=>{if(e.target.id==='helpModal')$(
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#helpModal').hidden)$('#helpModal').hidden=true});
 let models=[],curModel='';
 function setModelBtn(){const m=models.find(x=>x.id===curModel);$('#bModel').textContent='모델: '+(m?m.label:'기본')+' ▾'}
-$('#bModel').onclick=e=>{e.stopPropagation();closePops();const mm=$('#mmenu');if(!mm.hidden&&mm.dataset.o==='m'){mm.hidden=true;return}mm.dataset.o='m';
+$('#bModel').onclick=async e=>{e.stopPropagation();closePops();const mm=$('#mmenu');if(!mm.hidden&&mm.dataset.o==='m'){mm.hidden=true;return}mm.dataset.o='m';
+  try{const f=await api_().get_models();if(f&&f.length){models=f;setModelBtn()}}catch(e2){}   // 새 모델이 나왔으면 열 때마다 최신 이름으로
   mm.innerHTML=models.map(x=>`<button data-id="${esc(x.id)}" class="${x.id===curModel?'on':''}"><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></button>`).join('');mm.hidden=false};
 $('#mmenu').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.k==='e'){curEffort=b.dataset.id;$('#mmenu').hidden=true;setEffortBtn();await api_().set_setting('effort',curEffort);return toast(curEffort?'다음 메시지부터 생각 깊이를 "'+b.querySelector('b').textContent+'"로 합니다':'다음 메시지부터 기본 생각 깊이를 씁니다')}
@@ -1462,7 +1463,7 @@ setTimeout(bootDone,25000);                                  // 어떤 이유로
 window.addEventListener('pywebviewready',async()=>{
   try{const w=await api_().get_setting('sidebar');if(typeof w==='number'&&w>=0&&w<=SB_MAX)setSb(w>0&&w<SB_MIN?SB_MIN:w,false)}catch(e){}
   claudeOk=await api_().claude_available();setHint();setRunning(false);
-  try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=models.some(x=>x.id===sm)?sm:'';setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();chromeOn=(await api_().get_setting('chrome'))===true;setChromeBtn();{const sm2=await api_().get_setting('mode');if(['read','edit','all'].includes(sm2)){curMode=sm2;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x.dataset.m===sm2));setHint()}}efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true)}catch(e){}
+  try{models=await api_().get_models();const sm=await api_().get_setting('model');curModel=(()=>{const m=sm&&models.find(x=>x.id===sm||x.full===sm||sm.indexOf('claude-'+x.id+'-')===0);return m?m.id:''})();setModelBtn();webOn=(await api_().get_setting('web'))===true;setWebBtn();chromeOn=(await api_().get_setting('chrome'))===true;setChromeBtn();{const sm2=await api_().get_setting('mode');if(['read','edit','all'].includes(sm2)){curMode=sm2;document.querySelectorAll('#cmode button').forEach(x=>x.classList.toggle('on',x.dataset.m===sm2));setHint()}}efforts=await api_().get_efforts();{const se=await api_().get_setting('effort');curEffort=efforts.some(x=>x.id===se)?se:''}setEffortBtn();loadCmds();loadLimits();setTimeout(loadCmds,9000);checkHealth(true);const rfM=async()=>{try{const f=await api_().get_models();if(f&&f.length){models=f;setModelBtn()}}catch(e3){}};setTimeout(rfM,25000);setInterval(rfM,1800000)}catch(e){}
   try{ttsOn=(await api_().get_setting('tts'))===true;setTtsBtn();voiceAuto=(await api_().get_setting('voice_auto'))!==false;updMic()}catch(e){}
   try{talkOn=(await api_().get_setting('talk'))===true;setTalkBtn()}catch(e){}
   const init=await api_().get_initial();

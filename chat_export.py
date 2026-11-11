@@ -35,7 +35,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v6.2"
+TITLE = "Claude Code 대화창 v6.3"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -71,15 +71,142 @@ MODE_ARGS = {
     "edit": ["--permission-mode", "acceptEdits", "--allowedTools", "Read,Grep,Glob,Edit,Write,MultiEdit,NotebookEdit"],
     "all": ["--dangerously-skip-permissions"],
 }
-# 모델 선택 버튼. 이름은 --model 에 그대로 넘긴다(비어 있으면 Claude Code 기본 설정을 따른다)
-MODELS = [
-    {"id": "", "label": "기본", "desc": "Claude Code 설정을 따릅니다"},
-    {"id": "claude-fable-5-1", "label": "Fable 5.1", "desc": "가장 똑똑한 모델"},
-    {"id": "claude-opus-5-5", "label": "Opus 5.5", "desc": "어려운 일에"},
-    {"id": "claude-sonnet-5-5", "label": "Sonnet 5.5", "desc": "빠르고 균형 잡힌 모델"},
-    {"id": "claude-haiku-5-5", "label": "Haiku 5.5", "desc": "가장 빠르고 가볍습니다"},
+# 모델 선택 버튼. Claude Code 의 별칭(fable·opus·sonnet·haiku)을 --model 에 넘기면 항상 그 계열의 최신 모델로 풀린다.
+# 이름표의 버전은 실제로 쓰인 모델 이름(대화 기록, 응답 정보)에서 읽어 와 최신으로 유지한다. 모르는 새 계열이 나오면 목록에 자동으로 더한다.
+MODEL_BASE = [
+    ("fable", "Fable", "가장 똑똑한 모델"),
+    ("opus", "Opus", "어려운 일에"),
+    ("sonnet", "Sonnet", "빠르고 균형 잡힌 모델"),
+    ("haiku", "Haiku", "가장 빠르고 가볍습니다"),
 ]
-MODEL_IDS = {m["id"] for m in MODELS}
+MODEL_SEED = {"fable": "claude-fable-5-1", "opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5-5", "haiku": "claude-haiku-5-5"}
+MODEL_ALIASES = {a for a, _, _ in MODEL_BASE}
+_MODEL_RE = re.compile(r"claude-([a-z]+)-(\d{1,2})(?:-(\d{1,2}))?(?!\d)")
+_SAFE_MODEL = re.compile(r"^claude-[a-z0-9\-\.]{2,40}(\[[0-9a-z]+\])?$")
+
+
+def parse_model(mid):
+    """'claude-opus-5-5[1m]' -> ('opus', (5, 5)). 모르는 형식이면 None."""
+    m = _MODEL_RE.search(mid or "")
+    return (m.group(1), (int(m.group(2)), int(m.group(3) or 0))) if m else None
+
+
+def model_title(name, ver):
+    return "%s %d.%d" % (name, ver[0], ver[1]) if ver[1] else "%s %d" % (name, ver[0])
+
+
+def note_models(ids):
+    """새로 본 모델 이름을 기억해, 계열별 최신 버전을 설정에 보관한다."""
+    try:
+        seen = dict(read_settings().get("models_seen") or {})
+        changed = False
+        for mid in ids:
+            p = parse_model(mid)
+            if not p:
+                continue
+            fam, ver = p
+            old = parse_model(seen.get(fam, ""))
+            if old is None or ver > old[1]:
+                seen[fam] = "claude-%s-%d%s" % (fam, ver[0], "-%d" % ver[1] if ver[1] else "")
+                changed = True
+        if changed:
+            save_setting("models_seen", seen)
+    except Exception:
+        pass
+
+
+_scan_at = [0.0]
+
+
+def scan_models():
+    """최근 대화 기록에서 실제로 쓰인 모델 이름을 읽어 최신 버전을 갱신한다(30초에 한 번까지)."""
+    if time.time() - _scan_at[0] < 30 or not core.PROJECTS.exists():
+        return
+    _scan_at[0] = time.time()
+    try:
+        files = sorted(core.PROJECTS.glob("*/*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)[:8]
+        ids = set()
+        for p in files:
+            with open(p, "rb") as f:
+                f.seek(0, 2)
+                f.seek(max(0, f.tell() - 300_000))
+                ids.update(re.findall(r'"model":"(claude-[^"]+)"', f.read().decode("utf-8", "replace")))
+        note_models(ids)
+    except OSError:
+        pass
+
+
+_probe = {"busy": False}
+PROBE_EVERY = 6 * 3600   # 몇 시간에 한 번 별칭이 어떤 모델로 풀리는지 직접 확인한다
+
+
+def probe_models(force=False):
+    """Claude Code 에 별칭(fable·opus…)을 넘겨 실제로 어떤 모델로 풀리는지 시작 정보만 읽고 바로 끈다(응답을 요청하지 않아 비용이 없다).
+    새 모델이 나오면 별칭이 그쪽으로 풀리므로, 대화 기록에 아직 없어도 이름표가 따라간다. 백그라운드에서 돌린다."""
+    try:
+        if _probe["busy"] or (not force and time.time() - float(read_settings().get("models_probe_at") or 0) < PROBE_EVERY):
+            return
+        exe = find_claude()
+        if not exe:
+            return
+        _probe["busy"] = True
+    except Exception:
+        return
+
+    def work():
+        try:
+            got = []
+            for alias in sorted(MODEL_ALIASES):
+                p = subprocess.Popen([exe, "-p", "--output-format", "stream-json", "--verbose", "--model", alias],
+                                     cwd=str(Path.home()), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.DEVNULL, creationflags=NO_WINDOW)
+                timer = threading.Timer(30, p.kill)
+                timer.start()
+                try:
+                    try:
+                        p.stdin.write(b"hi")
+                        p.stdin.close()
+                    except OSError:
+                        pass
+                    for line in p.stdout:
+                        try:
+                            ev = json.loads(line.decode("utf-8", "replace"))
+                        except ValueError:
+                            continue
+                        if ev.get("type") == "system" and ev.get("model"):
+                            got.append(ev["model"])
+                            break
+                finally:
+                    timer.cancel()
+                    p.kill()
+                    p.wait()
+            note_models(got)
+            if got:
+                save_setting("models_probe_at", time.time())
+        except Exception:
+            pass
+        finally:
+            _probe["busy"] = False
+
+    threading.Thread(target=work, daemon=True).start()
+
+
+def build_models():
+    seen = read_settings().get("models_seen") or {}
+    out = [{"id": "", "label": "기본", "desc": "Claude Code 설정을 따릅니다"}]
+    for alias, name, desc in MODEL_BASE:
+        mid = seen.get(alias) or MODEL_SEED[alias]
+        p = parse_model(mid) or parse_model(MODEL_SEED[alias])
+        out.append({"id": alias, "label": model_title(name, p[1]), "desc": desc, "full": mid})
+    for fam, mid in sorted(seen.items()):   # 위 목록에 없는 새 계열
+        p = parse_model(mid)
+        if fam not in MODEL_ALIASES and p:
+            out.append({"id": mid, "label": model_title(fam.capitalize(), p[1]), "desc": "새로 나온 모델", "full": mid})
+    return out
+
+
+def model_ok(model):
+    return bool(model) and (model in MODEL_ALIASES or bool(_SAFE_MODEL.match(model)))
 # 생각 깊이(--effort). 높을수록 신중하지만 느리고 사용량이 많다
 EFFORTS = [
     {"id": "", "label": "기본", "desc": "Claude Code 설정을 따릅니다"},
@@ -929,7 +1056,9 @@ class Api:
         return self._new_cwd
 
     def get_models(self):
-        return MODELS
+        scan_models()
+        probe_models()   # 뒤에서 확인하고, 결과는 다음에 메뉴를 열 때 반영된다
+        return build_models()
 
     def get_efforts(self):
         return EFFORTS
@@ -1122,7 +1251,7 @@ class Api:
         args = [exe, "-p", "--output-format", "stream-json", "--verbose", *mode_args, *prompt_file_args()]
         if chrome:
             args.append("--chrome")
-        if model in MODEL_IDS and model:                  # 목록에 있는 이름만 넘긴다(임의 문자열이 명령줄에 들어가지 않게)
+        if model_ok(model):                               # 별칭이거나 claude-… 형식의 이름만 넘긴다(임의 문자열이 명령줄에 들어가지 않게)
             args += ["--model", model]
         if effort in EFFORT_IDS and effort:
             args += ["--effort", effort]
@@ -1165,6 +1294,7 @@ class Api:
                     run["result"] = ev
                 elif typ == "system" and ev.get("subtype") == "init":
                     run["model"] = ev.get("model")
+                    note_models([ev.get("model") or ""])
                     cmds = [c for c in (ev.get("slash_commands") or []) if isinstance(c, str)]
                     skills = [c for c in (ev.get("skills") or []) if isinstance(c, str)]
                     if cmds or skills:                     # 다음에 열었을 때 바로 자동완성이 되도록 저장
