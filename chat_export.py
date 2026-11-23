@@ -35,7 +35,7 @@ import voice
 
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 CATS = ("files", "cmds", "others")
-TITLE = "Claude Code 대화창 v6.3"
+TITLE = "Claude Code 대화창 v6.4"
 APP_VERSION = re.search(r"v(\d+(?:\.\d+)*)", TITLE).group(1)
 SITE_URL = "https://dh-chat-viewer.web.app/"
 UPDATE_URL = os.environ.get("CCV_UPDATE_URL") or SITE_URL + "version.json"   # 새 버전 확인용 작은 파일(글자 몇 줄)
@@ -157,7 +157,7 @@ def probe_models(force=False):
         try:
             got = []
             for alias in sorted(MODEL_ALIASES):
-                p = subprocess.Popen([exe, "-p", "--output-format", "stream-json", "--verbose", "--model", alias],
+                p = subprocess.Popen([exe, "-p", "--output-format", "stream-json", "--verbose", "--no-session-persistence", "--model", alias],
                                      cwd=str(Path.home()), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                      stderr=subprocess.DEVNULL, creationflags=NO_WINDOW)
                 timer = threading.Timer(30, p.kill)
