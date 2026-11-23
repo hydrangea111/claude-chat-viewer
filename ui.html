@@ -405,7 +405,7 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
 </head>
 <body>
 <aside>
-  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v6.4</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+  <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="17" height="17" fill="#fff"><path d="M5 4h14a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-6.5L8 21v-4H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/><circle cx="8.2" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="12" cy="10.5" r="1.25" fill="#c8643c"/><circle cx="15.8" cy="10.5" r="1.25" fill="#c8643c"/></svg></div><span class="bn">Claude Code 대화</span><span class="ver">v6.5</span><button class="sbtn" id="sbClose" title="사이드바 접기 (경계선을 끌거나 더블클릭해도 됩니다)"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
   <div class="newrow"><button class="btn primary" id="bNew">＋ 새 대화</button></div>
   <div class="search">
     <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -534,7 +534,7 @@ body.edon #ed{display:flex}body.edon #erz{display:block}
     <div class="errs">
       <div class="ec"><b>선택 버튼이 안 나옵니다</b><span>Claude가 선택지를 정해진 형식으로 쓰지 않은 경우입니다. 입력창에 직접 답하십시오.</span></div>
       <div class="ec"><b>웹 검색이 안 됩니다</b><span>웹 검색 스위치를 켜십시오. 꺼져 있으면 읽기만·파일 수정 모드에서는 막힙니다.</span></div>
-      <div class="ec"><b>브라우저 연결이 안 됩니다</b><span>브라우저 스위치를 켜고, Chrome에 Claude 확장 프로그램이 설치·연결돼 있는지 확인하십시오.</span></div>
+      <div class="ec"><b>브라우저 연결이 안 됩니다</b><span>"브라우저 확장이 연결되지 않았다"고 나올 때 순서대로 확인하십시오.<br>① 브라우저 스위치가 켜져 있고, Chrome에 <b>Claude 확장 프로그램</b>이 설치돼 있는지 봅니다.<br>② Chrome 오른쪽 위 퍼즐 아이콘에서 Claude 확장을 눌러, <b>Claude Code와 같은 계정</b>으로 로그인돼 있는지 봅니다. 로그인이 풀려 있으면 다시 로그인하십시오. 가장 흔한 원인입니다.<br>③ <b>Claude 데스크톱 앱</b>을 같이 설치했다면 같은 확장을 두고 부딪칠 수 있습니다. 데스크톱 앱을 끄고 Chrome을 완전히 종료했다가 다시 여십시오.<br>④ 그래도 안 되면 cmd에서 아래 두 줄을 차례로 실행하고(첫 줄은 백업, 둘째 줄이 삭제) Chrome을 다시 여십시오. 데스크톱 앱의 Chrome 연동은 꺼지고, 백업 파일을 더블클릭하면 되돌아갑니다. (화면에 ₩로 보이는 글자는 역슬래시(\) 이며, 그대로 복사해서 붙여 넣으면 됩니다.)<br><code>reg export "HKCU\Software\Google\Chrome\NativeMessagingHosts\com.anthropic.claude_browser_extension" "%USERPROFILE%\Desktop\claude_desktop_host_backup.reg" /y</code><br><code>reg delete "HKCU\Software\Google\Chrome\NativeMessagingHosts\com.anthropic.claude_browser_extension" /f</code></span></div>
       <div class="ec"><b>Claude Code가 없다고 나옵니다</b><span>Claude Code를 설치하고 로그인한 뒤 대화창을 다시 여십시오. <a href="https://dh-chat-viewer.web.app/claude-install.html" target="_blank" rel="noopener">설치하는 방법</a>.</span></div>
       <div class="ec"><b>exe가 Windows에 막힙니다</b><span>"애플리케이션 제어 정책…"으로 막히면 <a href="https://dh-chat-viewer.web.app/python-install.html" target="_blank" rel="noopener">Python으로 실행하는 방법</a>을 보십시오.</span></div>
       <div class="ec"><b>창이 늦게 뜹니다</b><span>PC가 느리거나 처음 실행할 때는 최대 수십 초 걸릴 수 있습니다. 잠시 기다려 주십시오.</span></div>
